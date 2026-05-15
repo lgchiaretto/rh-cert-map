@@ -10,22 +10,27 @@
         {
           name: "Technologist",
           check: (p) => p.has("EX180") || p.has("EX156"),
+          progress: (p) => (p.has("EX180") || p.has("EX156")) ? 1 : 0,
           hint: "Pass EX180 or EX156",
         },
         {
           name: "System Administrator",
           check: (p) => p.has("EX280"),
+          progress: (p) => p.has("EX280") ? 1 : 0,
           hint: "Pass EX280",
         },
         {
           name: "Engineer",
           check: (p) => p.has("EX280") && p.has("EX380"),
+          progress: (p) => ([p.has("EX280"), p.has("EX380")].filter(Boolean).length) / 2,
           hint: "Pass EX280 + EX380",
         },
         {
           name: "Specialist",
           check: (p) =>
             ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"].some((e) => p.has(e)),
+          progress: (p) =>
+            ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"].some((e) => p.has(e)) ? 1 : 0,
           hint: "Pass any specialist exam (EX316, EX336, EX370, EX430, EX432, EX229, or EX480)",
         },
         {
@@ -34,6 +39,12 @@
             p.has("EX280") &&
             p.has("EX380") &&
             ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"].filter((e) => p.has(e)).length >= 3,
+          progress: (p) => {
+            const needed = 5; // EX280 + EX380 + 3 specialist
+            let count = (p.has("EX280") ? 1 : 0) + (p.has("EX380") ? 1 : 0);
+            count += Math.min(3, ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"].filter((e) => p.has(e)).length);
+            return Math.min(1, count / needed);
+          },
           hint: "Pass EX280 + EX380 + at least 3 specialist exams",
         },
       ],
@@ -57,17 +68,21 @@
         {
           name: "System Administrator",
           check: (p) => p.has("EX200"),
+          progress: (p) => p.has("EX200") ? 1 : 0,
           hint: "Pass EX200 (RHCSA)",
         },
         {
           name: "Engineer",
           check: (p) => p.has("EX200") && p.has("EX342"),
+          progress: (p) => ([p.has("EX200"), p.has("EX342")].filter(Boolean).length) / 2,
           hint: "Pass EX200 + EX342",
         },
         {
           name: "Specialist",
           check: (p) =>
             ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"].some((e) => p.has(e)),
+          progress: (p) =>
+            ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"].some((e) => p.has(e)) ? 1 : 0,
           hint: "Pass any specialist exam (EX210, EX260, EX358, EX362, EX403, EX415, EX436, or EX442)",
         },
         {
@@ -76,6 +91,12 @@
             p.has("EX200") &&
             p.has("EX342") &&
             ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"].filter((e) => p.has(e)).length >= 3,
+          progress: (p) => {
+            const needed = 5;
+            let count = (p.has("EX200") ? 1 : 0) + (p.has("EX342") ? 1 : 0);
+            count += Math.min(3, ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"].filter((e) => p.has(e)).length);
+            return Math.min(1, count / needed);
+          },
           hint: "Pass EX200 + EX342 + at least 3 specialist exams",
         },
       ],
@@ -98,17 +119,21 @@
         {
           name: "System Administrator",
           check: (p) => p.has("EX200"),
+          progress: (p) => p.has("EX200") ? 1 : 0,
           hint: "Pass EX200 (RHCSA)",
         },
         {
           name: "Engineer",
           check: (p) => p.has("EX200") && p.has("EX294"),
+          progress: (p) => ([p.has("EX200"), p.has("EX294")].filter(Boolean).length) / 2,
           hint: "Pass EX200 + EX294",
         },
         {
           name: "Specialist",
           check: (p) =>
             ["EX374", "EX417", "EX457", "EX467"].some((e) => p.has(e)),
+          progress: (p) =>
+            ["EX374", "EX417", "EX457", "EX467"].some((e) => p.has(e)) ? 1 : 0,
           hint: "Pass any specialist exam (EX374, EX417, EX457, or EX467)",
         },
         {
@@ -117,6 +142,12 @@
             p.has("EX200") &&
             p.has("EX294") &&
             ["EX374", "EX417", "EX457", "EX467"].filter((e) => p.has(e)).length >= 3,
+          progress: (p) => {
+            const needed = 5;
+            let count = (p.has("EX200") ? 1 : 0) + (p.has("EX294") ? 1 : 0);
+            count += Math.min(3, ["EX374", "EX417", "EX457", "EX467"].filter((e) => p.has(e)).length);
+            return Math.min(1, count / needed);
+          },
           hint: "Pass EX200 + EX294 + at least 3 specialist exams",
         },
       ],
@@ -135,17 +166,21 @@
         {
           name: "Developer",
           check: (p) => p.has("EX188"),
+          progress: (p) => p.has("EX188") ? 1 : 0,
           hint: "Pass EX188",
         },
         {
           name: "Engineer",
           check: (p) => p.has("EX188") && p.has("EX288"),
+          progress: (p) => ([p.has("EX188"), p.has("EX288")].filter(Boolean).length) / 2,
           hint: "Pass EX188 + EX288",
         },
         {
           name: "Specialist",
           check: (p) =>
             ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"].some((e) => p.has(e)),
+          progress: (p) =>
+            ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"].some((e) => p.has(e)) ? 1 : 0,
           hint: "Pass any specialist exam (EX183, EX221, EX240, EX248, EX328, EX378, or EX482)",
         },
         {
@@ -154,6 +189,12 @@
             p.has("EX188") &&
             p.has("EX288") &&
             ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"].filter((e) => p.has(e)).length >= 3,
+          progress: (p) => {
+            const needed = 5;
+            let count = (p.has("EX188") ? 1 : 0) + (p.has("EX288") ? 1 : 0);
+            count += Math.min(3, ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"].filter((e) => p.has(e)).length);
+            return Math.min(1, count / needed);
+          },
           hint: "Pass EX188 + EX288 + at least 3 specialist exams",
         },
       ],
@@ -175,6 +216,7 @@
         {
           name: "Developer",
           check: (p) => p.has("EX267"),
+          progress: (p) => p.has("EX267") ? 1 : 0,
           hint: "Pass EX267",
         },
       ],
@@ -348,6 +390,7 @@
       svg.setAttribute("height", s.rowHeight);
 
       const achieved = product.levels.map((lvl) => lvl.check(passedExams));
+      const progressVals = product.levels.map((lvl) => lvl.progress(passedExams));
 
       for (let i = 0; i < levelCount - 1; i++) {
         const x1 = s.paddingLeft + i * gap + s.nodeRadius;
@@ -395,15 +438,50 @@
 
       product.levels.forEach((lvl, i) => {
         const cx = s.paddingLeft + i * gap;
+        const prog = progressVals[i];
+        const isPartial = !achieved[i] && prog > 0 && prog < 1;
 
+        // Background circle
         const circle = document.createElementNS(SVG_NS, "circle");
         circle.setAttribute("cx", cx);
         circle.setAttribute("cy", s.nodeY);
         circle.setAttribute("r", s.nodeRadius);
         circle.setAttribute("stroke-width", "2.5");
         circle.classList.add("level-node");
-        circle.classList.add(achieved[i] ? "achieved" : "not-achieved");
+        if (achieved[i]) {
+          circle.classList.add("achieved");
+        } else if (isPartial) {
+          circle.classList.add("partial");
+        } else {
+          circle.classList.add("not-achieved");
+        }
         svg.appendChild(circle);
+
+        // Partial fill: clip a rectangle to the circle showing progress from bottom
+        if (isPartial) {
+          const clipId = `clip-${product.name.replace(/\s+/g, "")}-${i}`;
+          const defs = document.createElementNS(SVG_NS, "defs");
+          const clipPath = document.createElementNS(SVG_NS, "clipPath");
+          clipPath.setAttribute("id", clipId);
+          const clipCircle = document.createElementNS(SVG_NS, "circle");
+          clipCircle.setAttribute("cx", cx);
+          clipCircle.setAttribute("cy", s.nodeY);
+          clipCircle.setAttribute("r", s.nodeRadius - 1.5);
+          clipPath.appendChild(clipCircle);
+          defs.appendChild(clipPath);
+          svg.appendChild(defs);
+
+          const fillHeight = (s.nodeRadius * 2) * prog;
+          const fillY = s.nodeY + s.nodeRadius - fillHeight;
+          const fillRect = document.createElementNS(SVG_NS, "rect");
+          fillRect.setAttribute("x", cx - s.nodeRadius);
+          fillRect.setAttribute("y", fillY);
+          fillRect.setAttribute("width", s.nodeRadius * 2);
+          fillRect.setAttribute("height", fillHeight);
+          fillRect.setAttribute("clip-path", `url(#${clipId})`);
+          fillRect.classList.add("partial-fill");
+          svg.appendChild(fillRect);
+        }
 
         if (achieved[i]) {
           const check = document.createElementNS(SVG_NS, "path");
@@ -426,7 +504,11 @@
         text.setAttribute("x", cx);
         text.setAttribute("y", s.nodeY + s.labelOffsetY);
         text.classList.add("level-label");
-        if (achieved[i]) text.classList.add("achieved");
+        if (achieved[i]) {
+          text.classList.add("achieved");
+        } else if (isPartial) {
+          text.classList.add("partial");
+        }
 
         const words = lvl.name.split(" ");
         if (words.length > 1) {
@@ -445,6 +527,14 @@
           text.appendChild(tspan2);
         } else {
           text.textContent = lvl.name;
+        }
+
+        if (isPartial) {
+          const tspanPartial = document.createElementNS(SVG_NS, "tspan");
+          tspanPartial.setAttribute("x", cx);
+          tspanPartial.setAttribute("dy", "1.15em");
+          tspanPartial.textContent = "(in progress)";
+          text.appendChild(tspanPartial);
         }
 
         svg.appendChild(text);

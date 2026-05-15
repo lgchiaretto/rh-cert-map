@@ -475,6 +475,21 @@ main {
   stroke: var(--node-empty-stroke);
 }
 
+.level-node.partial {
+  fill: var(--node-empty-fill);
+  stroke: #e67e22;
+}
+
+.partial-fill {
+  fill: #e67e22;
+  opacity: 0.85;
+}
+
+.level-label.partial {
+  fill: #e67e22;
+  font-weight: 500;
+}
+
 .level-connector {
   stroke: var(--node-empty-stroke);
   transition: stroke var(--transition);

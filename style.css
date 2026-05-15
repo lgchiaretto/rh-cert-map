@@ -1,0 +1,659 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-primary: #f2f2f2;
+  --bg-surface: #ffffff;
+  --text-accent: #ee0000;
+  --text-primary: #000000;
+  --text-secondary: #555555;
+  --gfx-accent: #ee0000;
+  --gfx-light: #ffffff;
+  --gfx-dark: #000000;
+  --border: #d2d2d2;
+  --border-light: #e8e8e8;
+  --hover-bg: #e8e8e8;
+  --node-empty-fill: #ffffff;
+  --node-empty-stroke: #cccccc;
+  --tooltip-bg: #000000;
+  --tooltip-text: #ffffff;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --radius: 8px;
+  --transition: 0.25s ease;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #000000;
+  --bg-surface: #292929;
+  --text-accent: #ee0000;
+  --text-primary: #ffffff;
+  --text-secondary: #aaaaaa;
+  --gfx-accent: #ee0000;
+  --gfx-light: #ffffff;
+  --gfx-dark: #000000;
+  --border: #444444;
+  --border-light: #3a3a3a;
+  --hover-bg: #3a3a3a;
+  --node-empty-fill: #292929;
+  --node-empty-stroke: #555555;
+  --tooltip-bg: #ffffff;
+  --tooltip-text: #000000;
+  --shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: "Red Hat Text", system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* ── Header ───────────────────────────────────── */
+
+header {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+header h1 {
+  font-family: "Red Hat Text", system-ui, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-accent);
+}
+
+/* ── Theme Toggle ─────────────────────────────── */
+
+#theme-toggle {
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.45rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+#theme-toggle:hover {
+  border-color: var(--text-accent);
+  color: var(--text-accent);
+}
+
+.icon-moon {
+  display: none;
+}
+
+[data-theme="dark"] .icon-sun {
+  display: none;
+}
+
+[data-theme="dark"] .icon-moon {
+  display: block;
+}
+
+/* ── Main Layout ──────────────────────────────── */
+
+main {
+  display: flex;
+  gap: 1.5rem;
+  max-width: 1320px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+  align-items: flex-start;
+}
+
+/* ── Verify Box ───────────────────────────────── */
+
+.verify-box {
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.verify-box label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.verify-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.verify-row input {
+  flex: 1 1 100%;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-family: "Red Hat Mono", monospace;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.verify-row input:focus {
+  border-color: var(--text-accent);
+}
+
+.verify-row input::placeholder {
+  color: var(--text-secondary);
+}
+
+.verify-row button {
+  padding: 0.55rem 0.85rem;
+  font-family: "Red Hat Text", system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity var(--transition);
+}
+
+.verify-row button:hover {
+  opacity: 0.85;
+}
+
+.verify-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#verify-btn {
+  background: var(--text-accent);
+  color: #ffffff;
+}
+
+#transcript-btn {
+  background: var(--text-primary);
+  color: var(--bg-surface);
+}
+
+.verify-status {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  line-height: 1.4;
+  min-height: 0;
+}
+
+.verify-status:empty {
+  display: none;
+}
+
+.verify-status.error {
+  color: var(--text-accent);
+}
+
+.verify-status.success {
+  color: #3e8635;
+}
+
+.verify-status.loading {
+  color: var(--text-secondary);
+}
+
+.verify-owner {
+  font-size: 0.88rem;
+  font-weight: 500;
+  margin-top: 0.4rem;
+  color: var(--text-primary);
+}
+
+.verify-owner:empty {
+  display: none;
+}
+
+/* ── Exam Panel ───────────────────────────────── */
+
+#exam-panel {
+  flex: 0 0 380px;
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  position: sticky;
+  top: 1.5rem;
+  max-height: calc(100vh - 3rem);
+  display: flex;
+  flex-direction: column;
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+.panel-header {
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-header h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.panel-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+#exam-search {
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-family: "Red Hat Text", system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+}
+
+#exam-search:focus {
+  border-color: var(--text-accent);
+}
+
+#exam-search::placeholder {
+  color: var(--text-secondary);
+}
+
+#exam-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 0.5rem 0;
+}
+
+/* Product group */
+
+.exam-group {
+  border-bottom: 1px solid var(--border-light);
+}
+
+.exam-group:last-child {
+  border-bottom: none;
+}
+
+.group-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.7rem 1.25rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: "Red Hat Text", system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  gap: 0.5rem;
+  transition: background var(--transition);
+}
+
+.group-toggle:hover {
+  background: var(--hover-bg);
+}
+
+.group-toggle .chevron {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
+  transform: rotate(45deg);
+  transition: transform var(--transition);
+  flex-shrink: 0;
+}
+
+.exam-group.collapsed .chevron {
+  transform: rotate(-45deg);
+}
+
+.group-exams {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.exam-group.collapsed .group-exams {
+  max-height: 0 !important;
+}
+
+.exam-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.5rem 1.25rem 0.5rem 2rem;
+  cursor: pointer;
+  transition: background var(--transition);
+  user-select: none;
+}
+
+.exam-item:hover {
+  background: var(--hover-bg);
+}
+
+.exam-item.hidden {
+  display: none;
+}
+
+.exam-item input[type="checkbox"] {
+  accent-color: var(--text-accent);
+  margin-top: 0.2rem;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.exam-item label {
+  cursor: pointer;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.exam-item label .exam-code {
+  font-family: "Red Hat Mono", monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.exam-item label .exam-name {
+  color: var(--text-secondary);
+}
+
+.panel-actions {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+#clear-all {
+  padding: 0.45rem 1rem;
+  font-family: "Red Hat Text", system-ui, sans-serif;
+  font-size: 0.82rem;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+}
+
+#clear-all:hover {
+  border-color: var(--text-accent);
+  color: var(--text-accent);
+}
+
+/* ── Map Panel ────────────────────────────────── */
+
+#map-panel {
+  flex: 1;
+  background: var(--bg-surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  min-width: 0;
+  transition: background var(--transition), box-shadow var(--transition);
+}
+
+#map-panel h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+.product-row {
+  margin-bottom: 1.5rem;
+}
+
+.product-row:last-child {
+  margin-bottom: 0;
+}
+
+.product-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+
+.product-row svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+/* SVG styles */
+
+.level-node {
+  transition: fill var(--transition), stroke var(--transition), filter var(--transition);
+}
+
+.level-node.achieved {
+  fill: var(--gfx-accent);
+  stroke: var(--gfx-accent);
+  filter: drop-shadow(0 0 6px rgba(238, 0, 0, 0.3));
+}
+
+.level-node.not-achieved {
+  fill: var(--node-empty-fill);
+  stroke: var(--node-empty-stroke);
+}
+
+.level-connector {
+  stroke: var(--node-empty-stroke);
+  transition: stroke var(--transition);
+}
+
+.level-connector.achieved {
+  stroke: var(--gfx-accent);
+}
+
+.level-connector-hover {
+  stroke: transparent;
+  cursor: pointer;
+}
+
+.level-label {
+  font-family: "Red Hat Text", system-ui, sans-serif;
+  font-size: 11px;
+  fill: var(--text-secondary);
+  text-anchor: middle;
+}
+
+.level-label.achieved {
+  fill: var(--gfx-accent);
+  font-weight: 600;
+}
+
+.arrowhead {
+  fill: var(--node-empty-stroke);
+  transition: fill var(--transition);
+}
+
+.arrowhead.achieved {
+  fill: var(--gfx-accent);
+}
+
+/* ── Tooltip ──────────────────────────────────── */
+
+.tooltip {
+  position: fixed;
+  z-index: 1000;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  max-width: 280px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Footer ───────────────────────────────────── */
+
+footer {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+footer a {
+  color: var(--text-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* ── Responsive ───────────────────────────────── */
+
+@media (max-width: 860px) {
+  main {
+    flex-direction: column;
+  }
+
+  #exam-panel {
+    flex: none;
+    width: 100%;
+    position: static;
+    max-height: none;
+  }
+
+  #exam-list {
+    max-height: 40vh;
+  }
+
+  #map-panel {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  header {
+    padding: 1rem 3rem 1rem 1rem;
+  }
+
+  header h1 {
+    font-size: 1.2rem;
+    text-align: left;
+  }
+
+  #theme-toggle {
+    right: 0.75rem;
+  }
+
+  main {
+    padding: 0 0.5rem;
+    margin: 0.5rem auto;
+    gap: 0.5rem;
+  }
+
+  .verify-box {
+    padding: 1rem;
+  }
+
+  .verify-row button {
+    flex: 1 1 calc(50% - 0.25rem);
+    font-size: 0.75rem;
+    padding: 0.5rem 0.5rem;
+  }
+
+  .panel-header {
+    padding: 1rem;
+  }
+
+  .panel-subtitle {
+    font-size: 0.78rem;
+  }
+
+  .exam-item {
+    padding: 0.5rem 1rem 0.5rem 1.5rem;
+  }
+
+  .exam-item label {
+    font-size: 0.82rem;
+  }
+
+  .group-toggle {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  #exam-list {
+    max-height: 35vh;
+  }
+
+  #map-panel {
+    padding: 1rem;
+  }
+
+  #map-panel h2 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .product-label {
+    font-size: 0.78rem;
+  }
+
+  .product-row {
+    margin-bottom: 1rem;
+  }
+
+  .level-label {
+    font-size: 9px;
+  }
+
+  footer {
+    padding: 1rem 0.75rem;
+    font-size: 0.78rem;
+  }
+}

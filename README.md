@@ -2,6 +2,10 @@
 
 A client-side web app that helps Red Hat certified professionals visualize their certification progress across five product lines: OpenShift, Enterprise Linux, Ansible, Cloud-Native Applications, and AI.
 
+## Live Website
+
+Access the webapp in this link [https://rh-cert-map.wasmer.app/](https://rh-cert-map.wasmer.app/) or clone it and open `index.html` locally on your machine.
+
 ## Features
 
 - **Interactive certification map** with five horizontal arrow tracks showing levels from Technologist/Developer up to Architect

@@ -632,6 +632,10 @@
     return matched;
   }
 
+  const CREDENTIAL_ALIASES = {
+    "red hat certified specialist in linux performance tuning": "EX442",
+  };
+
   function normalizeCredName(name) {
     return name.toLowerCase().replace(/\s*\(rhcsa\)\s*/g, "").trim();
   }
@@ -643,6 +647,14 @@
 
     for (const cred of credentials) {
       const credNorm = normalizeCredName(cred);
+
+      // Check aliases first
+      const aliasCode = CREDENTIAL_ALIASES[credNorm];
+      if (aliasCode) {
+        matched.add(aliasCode);
+        continue;
+      }
+
       for (const exam of allExams) {
         const examNorm = normalizeCredName(exam.name);
         if (credNorm === examNorm || credNorm.includes(examNorm) || examNorm.includes(credNorm)) {

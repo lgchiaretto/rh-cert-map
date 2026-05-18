@@ -145,12 +145,12 @@ main {
 
 .verify-row {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: center;
 }
 
 .verify-row input {
-  flex: 1 1 100%;
+  flex: 1 1 0;
   padding: 0.55rem 0.85rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -194,11 +194,6 @@ main {
 #verify-btn {
   background: var(--text-accent);
   color: #ffffff;
-}
-
-#transcript-btn {
-  background: var(--text-primary);
-  color: var(--bg-surface);
 }
 
 .verify-status {
@@ -269,8 +264,14 @@ main {
   line-height: 1.4;
 }
 
+.search-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
 #exam-search {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 0.55rem 0.85rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -395,13 +396,8 @@ main {
   color: var(--text-secondary);
 }
 
-.panel-actions {
-  padding: 0.75rem 1.25rem;
-  border-top: 1px solid var(--border);
-}
-
 #clear-all {
-  padding: 0.45rem 1rem;
+  padding: 0.45rem 0.75rem;
   font-family: "Red Hat Text", system-ui, sans-serif;
   font-size: 0.82rem;
   background: none;
@@ -409,6 +405,7 @@ main {
   border-radius: var(--radius);
   cursor: pointer;
   color: var(--text-secondary);
+  white-space: nowrap;
   transition: all var(--transition);
 }
 
@@ -525,6 +522,66 @@ main {
   fill: var(--gfx-accent);
 }
 
+/* ── Other Certifications ─────────────────────── */
+
+.other-certs {
+  margin-top: 2rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+}
+
+.other-certs h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.other-certs table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.other-certs th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.other-certs td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+
+.other-certs tr:last-child td {
+  border-bottom: none;
+}
+
+.date-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.date-fresh {
+  background: #28a745;
+  color: #fff;
+}
+
+.date-expired {
+  background: #dc3545;
+  color: #fff;
+}
+
 /* ── Tooltip ──────────────────────────────────── */
 
 .tooltip {
@@ -616,7 +673,6 @@ footer a:hover {
   }
 
   .verify-row button {
-    flex: 1 1 calc(50% - 0.25rem);
     font-size: 0.75rem;
     padding: 0.5rem 0.5rem;
   }

@@ -4,10 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Red Hat Certification Map</title>
+  <link rel="icon" type="image/png" href="redhat-favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Mono:wght@400;600&family=Red+Hat+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script>
+    (function() {
+      var APP_VERSION = "1";
+      fetch("version.txt?t=" + Date.now())
+        .then(function(r) { return r.text(); })
+        .then(function(v) {
+          if (v.trim() !== APP_VERSION) {
+            location.reload(true);
+          }
+        })
+        .catch(function() {});
+    })();
+  </script>
 </head>
 <body>
   <header>
@@ -25,7 +39,6 @@
         <div class="verify-row">
           <input type="text" id="cert-id-input" placeholder="###-###-###" autocomplete="off">
           <button id="verify-btn" type="button">Verify</button>
-          <button id="transcript-btn" type="button">Read from Exam Transcripts</button>
         </div>
         <p id="verify-status" class="verify-status"></p>
         <p id="verify-owner" class="verify-owner"></p>
@@ -33,17 +46,30 @@
       <div class="panel-header">
         <h2>Exams</h2>
         <p class="panel-subtitle">Check the exams you've passed to see your certification progress</p>
-        <input type="text" id="exam-search" placeholder="Search exams..." autocomplete="off">
+        <div class="search-row">
+          <input type="text" id="exam-search" placeholder="Search exams..." autocomplete="off">
+          <button id="clear-all" type="button">Clear All</button>
+        </div>
       </div>
       <div id="exam-list"></div>
-      <div class="panel-actions">
-        <button id="clear-all" type="button">Clear All</button>
-      </div>
     </section>
 
     <section id="map-panel">
       <h2>Certification Map</h2>
       <div id="cert-map"></div>
+      <div id="other-exams" class="other-certs" hidden>
+        <h3>Other Exams</h3>
+        <table id="other-exams-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Certification</th>
+              <th>Date Obtained</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
   </main>
 

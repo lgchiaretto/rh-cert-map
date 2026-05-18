@@ -622,7 +622,6 @@
 
   const certIdInput = document.getElementById("cert-id-input");
   const verifyBtn = document.getElementById("verify-btn");
-  const transcriptBtn = document.getElementById("transcript-btn");
   const verifyStatus = document.getElementById("verify-status");
   const verifyOwner = document.getElementById("verify-owner");
 
@@ -676,16 +675,38 @@
   }
 
   function extractExamTranscript(doc) {
-    const examCodes = new Set();
-    const strongTags = doc.querySelectorAll("strong");
-    for (const el of strongTags) {
-      const text = el.textContent.trim();
-      const match = text.match(/^(EX\d{3})\s/);
-      if (match) {
-        examCodes.add(match[1]);
+    const exams = [];
+    const h3s = doc.querySelectorAll("h3");
+    for (const h3 of h3s) {
+      if (h3.textContent.trim() === "Exam Transcript") {
+        const table = h3.nextElementSibling;
+        if (!table) break;
+        const rows = table.querySelectorAll("tr");
+        for (const row of rows) {
+          const strong = row.querySelector("strong");
+          if (!strong) continue;
+          const text = strong.textContent.trim();
+          const match = text.match(/^(EX\d{3})\s+(.*)/);
+          if (!match) continue;
+
+          const code = match[1];
+          const name = match[2];
+
+          let date = "";
+          const innerTds = row.querySelectorAll("td");
+          for (let j = 0; j < innerTds.length; j++) {
+            if (innerTds[j].textContent.trim().startsWith("Date") && innerTds[j + 1]) {
+              date = innerTds[j + 1].textContent.trim();
+              break;
+            }
+          }
+
+          exams.push({ code, name, date });
+        }
+        break;
       }
     }
-    return examCodes;
+    return exams;
   }
 
   function extractCurrentCredentials(doc) {
@@ -694,14 +715,28 @@
     for (const h3 of h3s) {
       if (h3.textContent.trim() === "Current Credentials") {
         const table = h3.nextElementSibling;
-        if (table) {
-          const creds = table.querySelectorAll("strong");
-          for (const c of creds) {
-            const t = c.textContent.trim();
-            if (t.startsWith("Red Hat")) {
-              credentials.push(t);
+        if (!table) break;
+        const rows = table.querySelectorAll("tr");
+        for (const row of rows) {
+          const strong = row.querySelector("strong");
+          if (!strong) continue;
+          const name = strong.textContent.trim();
+          if (!name.startsWith("Red Hat")) continue;
+
+          let date = "";
+          let expiry = "";
+          const innerTds = row.querySelectorAll("td");
+          for (let j = 0; j < innerTds.length; j++) {
+            const cellText = innerTds[j].textContent.trim();
+            if (cellText === "Date:" && innerTds[j + 1]) {
+              date = innerTds[j + 1].textContent.trim();
+            }
+            if (cellText.includes("Current Until:") && innerTds[j + 1]) {
+              expiry = innerTds[j + 1].textContent.trim();
             }
           }
+
+          credentials.push({ name, date, expiry });
         }
         break;
       }
@@ -709,17 +744,20 @@
     return credentials;
   }
 
-  function matchExamCodes(fetchedCodes) {
+  function matchExamCodes(transcriptExams) {
     const matched = new Set();
+    const unmatched = [];
     const knownCodes = new Set();
     PRODUCTS.forEach((p) => p.exams.forEach((e) => knownCodes.add(e.code)));
 
-    for (const code of fetchedCodes) {
-      if (knownCodes.has(code)) {
-        matched.add(code);
+    for (const exam of transcriptExams) {
+      if (knownCodes.has(exam.code)) {
+        matched.add(exam.code);
+      } else {
+        unmatched.push(exam);
       }
     }
-    return matched;
+    return { matched, unmatched };
   }
 
   const CREDENTIAL_ALIASES = {
@@ -732,27 +770,51 @@
 
   function matchCredentialsToExams(credentials) {
     const matched = new Set();
+    const unmatched = [];
     const allExams = [];
     PRODUCTS.forEach((p) => p.exams.forEach((e) => allExams.push(e)));
 
     for (const cred of credentials) {
-      const credNorm = normalizeCredName(cred);
+      const credName = typeof cred === "string" ? cred : cred.name;
+      const credNorm = normalizeCredName(credName);
+      let found = false;
 
       // Check aliases first
       const aliasCode = CREDENTIAL_ALIASES[credNorm];
       if (aliasCode) {
         matched.add(aliasCode);
+        found = true;
         continue;
       }
 
+      // Exact match first
       for (const exam of allExams) {
-        const examNorm = normalizeCredName(exam.name);
-        if (credNorm === examNorm || credNorm.includes(examNorm) || examNorm.includes(credNorm)) {
+        if (credNorm === normalizeCredName(exam.name)) {
           matched.add(exam.code);
+          found = true;
         }
       }
+      if (found) continue;
+
+      // Substring match: pick the shortest (most specific) exam name
+      let bestMatch = null;
+      let bestLen = Infinity;
+      for (const exam of allExams) {
+        const examNorm = normalizeCredName(exam.name);
+        if (credNorm.includes(examNorm) || examNorm.includes(credNorm)) {
+          if (examNorm.length < bestLen) {
+            bestLen = examNorm.length;
+            bestMatch = exam.code;
+          }
+        }
+      }
+      if (bestMatch) {
+        matched.add(bestMatch);
+      } else {
+        unmatched.push(cred);
+      }
     }
-    return matched;
+    return { matched, unmatched };
   }
 
   function applyMatchedExams(matchedCodes) {
@@ -767,14 +829,64 @@
     renderMap();
   }
 
-  // "Verify" button: reads from Current Credentials
+  // ── Other Exams Table ───────────────────────────────────────────────────
+
+  const otherExamsSection = document.getElementById("other-exams");
+  const otherExamsTable = document.getElementById("other-exams-table");
+
+  function isOlderThan3Years(dateStr) {
+    const parsed = new Date(dateStr);
+    if (isNaN(parsed)) return false;
+    const threeYearsAgo = new Date();
+    threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+    return parsed < threeYearsAgo;
+  }
+
+  function renderOtherExams(unmatchedExams) {
+    const tbody = otherExamsTable.querySelector("tbody");
+    tbody.innerHTML = "";
+
+    if (!unmatchedExams || unmatchedExams.length === 0) {
+      otherExamsSection.hidden = true;
+      return;
+    }
+
+    for (const exam of unmatchedExams) {
+      const row = document.createElement("tr");
+
+      const tdCode = document.createElement("td");
+      tdCode.textContent = exam.code;
+
+      const tdName = document.createElement("td");
+      tdName.textContent = exam.name;
+
+      const tdDate = document.createElement("td");
+      if (exam.date) {
+        const badge = document.createElement("span");
+        badge.textContent = exam.date;
+        badge.className = "date-badge " + (isOlderThan3Years(exam.date) ? "date-expired" : "date-fresh");
+        tdDate.appendChild(badge);
+      } else {
+        tdDate.textContent = "—";
+      }
+
+      row.appendChild(tdCode);
+      row.appendChild(tdName);
+      row.appendChild(tdDate);
+      tbody.appendChild(row);
+    }
+
+    otherExamsSection.hidden = false;
+  }
+
+  // "Verify" button: populates Certification Map from Current Credentials,
+  // and Other Exams from Exam Transcript
   verifyBtn.addEventListener("click", async () => {
     const certId = certIdInput.value;
     verifyStatus.textContent = "Fetching certifications...";
     verifyStatus.className = "verify-status loading";
     verifyOwner.textContent = "";
     verifyBtn.disabled = true;
-    transcriptBtn.disabled = true;
 
     try {
       const { doc, ownerName } = await fetchPage(certId);
@@ -788,16 +900,20 @@
         throw new Error("No current credentials found on the page");
       }
 
-      const matchedCodes = matchCredentialsToExams(credentials);
+      const { matched: matchedCodes } = matchCredentialsToExams(credentials);
       applyMatchedExams(matchedCodes);
 
-      const matched = matchedCodes.size;
+      const transcriptExams = extractExamTranscript(doc);
+      const { unmatched } = matchExamCodes(transcriptExams);
+      renderOtherExams(unmatched);
+
+      const matchedCount = matchedCodes.size;
       const total = credentials.length;
-      if (matched === 0) {
+      if (matchedCount === 0) {
         verifyStatus.textContent = `Found ${total} credential(s) but none matched known exams`;
         verifyStatus.className = "verify-status error";
       } else {
-        verifyStatus.textContent = `Matched ${matched} of ${total} current credential(s)`;
+        verifyStatus.textContent = `Matched ${matchedCount} of ${total} current credential(s)`;
         verifyStatus.className = "verify-status success";
       }
     } catch (err) {
@@ -806,50 +922,6 @@
       verifyOwner.textContent = "";
     } finally {
       verifyBtn.disabled = false;
-      transcriptBtn.disabled = false;
-    }
-  });
-
-  // "Read from Exam Transcripts" button: reads from Exam Transcript section
-  transcriptBtn.addEventListener("click", async () => {
-    const certId = certIdInput.value;
-    verifyStatus.textContent = "Fetching exam transcript...";
-    verifyStatus.className = "verify-status loading";
-    verifyOwner.textContent = "";
-    verifyBtn.disabled = true;
-    transcriptBtn.disabled = true;
-
-    try {
-      const { doc, ownerName } = await fetchPage(certId);
-
-      if (ownerName) {
-        verifyOwner.textContent = "Owner: " + ownerName;
-      }
-
-      const examCodes = extractExamTranscript(doc);
-      if (examCodes.size === 0) {
-        throw new Error("No exam transcript found on the page");
-      }
-
-      const matchedCodes = matchExamCodes(examCodes);
-      applyMatchedExams(matchedCodes);
-
-      const matched = matchedCodes.size;
-      const total = examCodes.size;
-      if (matched === 0) {
-        verifyStatus.textContent = `Found ${total} exam(s) on transcript but none matched known exams`;
-        verifyStatus.className = "verify-status error";
-      } else {
-        verifyStatus.textContent = `Matched ${matched} of ${total} exam(s) from transcript`;
-        verifyStatus.className = "verify-status success";
-      }
-    } catch (err) {
-      verifyStatus.textContent = err.message;
-      verifyStatus.className = "verify-status error";
-      verifyOwner.textContent = "";
-    } finally {
-      verifyBtn.disabled = false;
-      transcriptBtn.disabled = false;
     }
   });
 

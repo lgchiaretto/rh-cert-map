@@ -9,24 +9,28 @@
       levels: [
         {
           name: "Technologist",
+          codes: ["EX180", "EX156"],
           check: (p) => p.has("EX180") || p.has("EX156"),
           progress: (p) => (p.has("EX180") || p.has("EX156")) ? 1 : 0,
           hint: "Pass EX180 or EX156",
         },
         {
           name: "System Administrator",
+          codes: ["EX280"],
           check: (p) => p.has("EX280"),
           progress: (p) => p.has("EX280") ? 1 : 0,
           hint: "Pass EX280",
         },
         {
           name: "Engineer",
+          codes: ["EX280", "EX380"],
           check: (p) => p.has("EX280") && p.has("EX380"),
           progress: (p) => ([p.has("EX280"), p.has("EX380")].filter(Boolean).length) / 2,
           hint: "Pass EX280 + EX380",
         },
         {
           name: "Specialist",
+          codes: ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"],
           check: (p) =>
             ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"].some((e) => p.has(e)),
           progress: (p) =>
@@ -35,6 +39,7 @@
         },
         {
           name: "Architect",
+          codes: ["EX280", "EX380", "EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"],
           check: (p) =>
             p.has("EX280") &&
             p.has("EX380") &&
@@ -67,18 +72,21 @@
       levels: [
         {
           name: "System Administrator",
+          codes: ["EX200"],
           check: (p) => p.has("EX200"),
           progress: (p) => p.has("EX200") ? 1 : 0,
           hint: "Pass EX200 (RHCSA)",
         },
         {
           name: "Engineer",
+          codes: ["EX200", "EX342"],
           check: (p) => p.has("EX200") && p.has("EX342"),
           progress: (p) => ([p.has("EX200"), p.has("EX342")].filter(Boolean).length) / 2,
           hint: "Pass EX200 + EX342",
         },
         {
           name: "Specialist",
+          codes: ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"],
           check: (p) =>
             ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"].some((e) => p.has(e)),
           progress: (p) =>
@@ -87,6 +95,7 @@
         },
         {
           name: "Architect",
+          codes: ["EX200", "EX342", "EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"],
           check: (p) =>
             p.has("EX200") &&
             p.has("EX342") &&
@@ -118,18 +127,21 @@
       levels: [
         {
           name: "System Administrator",
+          codes: ["EX200"],
           check: (p) => p.has("EX200"),
           progress: (p) => p.has("EX200") ? 1 : 0,
           hint: "Pass EX200 (RHCSA)",
         },
         {
           name: "Engineer",
+          codes: ["EX200", "EX294"],
           check: (p) => p.has("EX200") && p.has("EX294"),
           progress: (p) => ([p.has("EX200"), p.has("EX294")].filter(Boolean).length) / 2,
           hint: "Pass EX200 + EX294",
         },
         {
           name: "Specialist",
+          codes: ["EX374", "EX417", "EX457", "EX467"],
           check: (p) =>
             ["EX374", "EX417", "EX457", "EX467"].some((e) => p.has(e)),
           progress: (p) =>
@@ -138,6 +150,7 @@
         },
         {
           name: "Architect",
+          codes: ["EX200", "EX294", "EX374", "EX417", "EX457", "EX467"],
           check: (p) =>
             p.has("EX200") &&
             p.has("EX294") &&
@@ -165,18 +178,21 @@
       levels: [
         {
           name: "Developer",
+          codes: ["EX188"],
           check: (p) => p.has("EX188"),
           progress: (p) => p.has("EX188") ? 1 : 0,
           hint: "Pass EX188",
         },
         {
           name: "Engineer",
+          codes: ["EX188", "EX288"],
           check: (p) => p.has("EX188") && p.has("EX288"),
           progress: (p) => ([p.has("EX188"), p.has("EX288")].filter(Boolean).length) / 2,
           hint: "Pass EX188 + EX288",
         },
         {
           name: "Specialist",
+          codes: ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"],
           check: (p) =>
             ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"].some((e) => p.has(e)),
           progress: (p) =>
@@ -185,6 +201,7 @@
         },
         {
           name: "Architect",
+          codes: ["EX188", "EX288", "EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"],
           check: (p) =>
             p.has("EX188") &&
             p.has("EX288") &&
@@ -215,6 +232,7 @@
       levels: [
         {
           name: "Developer",
+          codes: ["EX267"],
           check: (p) => p.has("EX267"),
           progress: (p) => p.has("EX267") ? 1 : 0,
           hint: "Pass EX267",
@@ -579,7 +597,7 @@
   }
 
   function buildCircleTooltip(lvl, product) {
-    const codes = (lvl.hint.match(/EX\d{3}/g) || []);
+    const codes = lvl.codes || [];
     const examMap = {};
     product.exams.forEach((ex) => { examMap[ex.code] = ex.name; });
 

@@ -230,6 +230,21 @@ main {
   display: none;
 }
 
+.verify-source {
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+  color: var(--text-secondary);
+}
+
+.verify-source:empty {
+  display: none;
+}
+
+.verify-source a {
+  color: var(--text-accent);
+  text-decoration: underline;
+}
+
 /* ── Exam Panel ───────────────────────────────── */
 
 #exam-panel {
@@ -593,7 +608,7 @@ main {
   line-height: 1.45;
   padding: 0.6rem 0.85rem;
   border-radius: 6px;
-  max-width: 280px;
+  max-width: 380px;
   pointer-events: none;
   opacity: 0;
   transform: translateY(4px);

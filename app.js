@@ -538,6 +538,25 @@
         }
 
         svg.appendChild(text);
+
+        // Hover target for circle tooltip
+        const hoverCircle = document.createElementNS(SVG_NS, "circle");
+        hoverCircle.setAttribute("cx", cx);
+        hoverCircle.setAttribute("cy", s.nodeY);
+        hoverCircle.setAttribute("r", s.nodeRadius + 4);
+        hoverCircle.setAttribute("fill", "transparent");
+        hoverCircle.setAttribute("stroke", "none");
+        hoverCircle.style.cursor = "pointer";
+        hoverCircle.addEventListener("mouseenter", (e) => showTooltip(e, buildCircleTooltip(lvl, product)));
+        hoverCircle.addEventListener("mousemove", (e) => moveTooltip(e));
+        hoverCircle.addEventListener("mouseleave", hideTooltip);
+        hoverCircle.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          const touch = e.touches[0];
+          showTooltip(touch, buildCircleTooltip(lvl, product));
+          setTimeout(hideTooltip, 3000);
+        }, { passive: false });
+        svg.appendChild(hoverCircle);
       });
 
       row.appendChild(svg);
@@ -547,11 +566,48 @@
 
   // ── Tooltip ───────────────────────────────────────────────────────────────
 
-  function showTooltip(e, text) {
-    tooltipEl.textContent = text;
+  function showTooltip(e, content) {
+    if (typeof content === "string") {
+      tooltipEl.textContent = content;
+    } else {
+      tooltipEl.innerHTML = "";
+      tooltipEl.appendChild(content);
+    }
     tooltipEl.classList.add("visible");
     tooltipEl.setAttribute("aria-hidden", "false");
     moveTooltip(e);
+  }
+
+  function buildCircleTooltip(lvl, product) {
+    const codes = (lvl.hint.match(/EX\d{3}/g) || []);
+    const examMap = {};
+    product.exams.forEach((ex) => { examMap[ex.code] = ex.name; });
+
+    const frag = document.createDocumentFragment();
+
+    const title = document.createElement("div");
+    title.style.fontWeight = "600";
+    title.style.marginBottom = "0.4em";
+    title.textContent = lvl.hint;
+    frag.appendChild(title);
+
+    if (codes.length > 0) {
+      const list = document.createElement("div");
+      list.style.fontSize = "0.82em";
+      codes.forEach((code) => {
+        const row = document.createElement("div");
+        row.style.padding = "0.15em 0";
+        const passed = passedExams.has(code);
+        const icon = passed ? "\u2705" : "\u274c";
+        const name = examMap[code] || code;
+        row.textContent = `${icon} ${code} — ${name}`;
+        if (!passed) row.style.opacity = "0.6";
+        list.appendChild(row);
+      });
+      frag.appendChild(list);
+    }
+
+    return frag;
   }
 
   function moveTooltip(e) {
@@ -624,6 +680,7 @@
   const verifyBtn = document.getElementById("verify-btn");
   const verifyStatus = document.getElementById("verify-status");
   const verifyOwner = document.getElementById("verify-owner");
+  const verifySource = document.getElementById("verify-source");
 
   async function fetchPage(certId) {
     const id = certId.trim();
@@ -886,6 +943,7 @@
     verifyStatus.textContent = "Fetching certifications...";
     verifyStatus.className = "verify-status loading";
     verifyOwner.textContent = "";
+    verifySource.innerHTML = "";
     verifyBtn.disabled = true;
 
     try {
@@ -894,6 +952,9 @@
       if (ownerName) {
         verifyOwner.textContent = "Owner: " + ownerName;
       }
+
+      const sourceUrl = "https://rhtapps.redhat.com/verify/?certId=" + certId.trim();
+      verifySource.innerHTML = 'Data is obtained from <a href="' + sourceUrl + '" target="_blank" rel="noopener noreferrer">this link</a>';
 
       const credentials = extractCurrentCredentials(doc);
       if (credentials.length === 0) {
@@ -920,6 +981,7 @@
       verifyStatus.textContent = err.message;
       verifyStatus.className = "verify-status error";
       verifyOwner.textContent = "";
+      verifySource.innerHTML = "";
     } finally {
       verifyBtn.disabled = false;
     }

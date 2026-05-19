@@ -622,6 +622,37 @@ main {
   color: #fff;
 }
 
+.expires-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+}
+
+.expires-critical {
+  background: var(--color-expired);
+}
+
+.expires-warning {
+  background: var(--color-partial);
+}
+
+.expires-healthy {
+  background: var(--color-fresh);
+}
+
+.expires-expired {
+  background: var(--text-secondary);
+}
+
+.expires-unknown {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
 /* ── Tooltip ──────────────────────────────────── */
 
 .tooltip {

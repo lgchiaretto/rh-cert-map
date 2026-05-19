@@ -774,6 +774,11 @@
     return common / Math.max(setA.size, setB.size);
   }
 
+  function extractRole(normalized) {
+    const match = normalized.match(/certified\s+(\w+)/);
+    return match ? match[1] : null;
+  }
+
   function matchCredentialsToExams(credentials) {
     const matched = new Set();
     const unmatched = [];
@@ -803,10 +808,14 @@
       if (found) continue;
 
       // Word-overlap scoring: require >= 70% overlap
+      // Also require the role word (after "certified") matches between both
+      const credRole = extractRole(credNorm);
       let bestMatch = null;
       let bestScore = 0;
       for (const exam of allExams) {
         const examNorm = normalizeCredName(exam.name);
+        const examRole = extractRole(examNorm);
+        if (credRole && examRole && credRole !== examRole) continue;
         const score = wordOverlap(credNorm, examNorm);
         if (score >= 0.7 && score > bestScore) {
           bestScore = score;
@@ -885,6 +894,89 @@
     otherExamsSection.hidden = false;
   }
 
+  // ── Old Credentials Table ───────────────────────────────────────────────
+
+  const oldCredsSection = document.getElementById("old-credentials");
+  const oldCredsTable = document.getElementById("old-credentials-table");
+
+  function computeExpiresIn(expiryStr) {
+    const expiry = new Date(expiryStr);
+    if (isNaN(expiry)) return { text: "—", status: "unknown" };
+
+    const now = new Date();
+    if (expiry <= now) return { text: "Expired", status: "expired" };
+
+    let years = expiry.getFullYear() - now.getFullYear();
+    let months = expiry.getMonth() - now.getMonth();
+    let days = expiry.getDate() - now.getDate();
+
+    if (days < 0) {
+      months--;
+      const prevMonth = new Date(expiry.getFullYear(), expiry.getMonth(), 0);
+      days += prevMonth.getDate();
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    const parts = [];
+    if (years > 0) parts.push(`${years}y`);
+    if (months > 0) parts.push(`${months}m`);
+    if (days > 0) parts.push(`${days}d`);
+    const text = parts.join(" ") || "< 1 day";
+
+    const totalMonths = years * 12 + months;
+    let status;
+    if (totalMonths < 3) status = "critical";
+    else if (totalMonths < 12) status = "warning";
+    else status = "healthy";
+
+    return { text, status };
+  }
+
+  function renderOldCredentials(unmatchedCreds) {
+    const tbody = oldCredsTable.querySelector("tbody");
+    tbody.innerHTML = "";
+
+    if (!unmatchedCreds || unmatchedCreds.length === 0) {
+      oldCredsSection.hidden = true;
+      return;
+    }
+
+    for (const cred of unmatchedCreds) {
+      const row = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.textContent = cred.name || "—";
+
+      const tdDate = document.createElement("td");
+      tdDate.textContent = cred.date || "—";
+
+      const tdUntil = document.createElement("td");
+      tdUntil.textContent = cred.expiry || "—";
+
+      const tdExpires = document.createElement("td");
+      if (cred.expiry) {
+        const { text, status } = computeExpiresIn(cred.expiry);
+        const badge = document.createElement("span");
+        badge.textContent = text;
+        badge.className = "expires-badge expires-" + status;
+        tdExpires.appendChild(badge);
+      } else {
+        tdExpires.textContent = "—";
+      }
+
+      row.appendChild(tdName);
+      row.appendChild(tdDate);
+      row.appendChild(tdUntil);
+      row.appendChild(tdExpires);
+      tbody.appendChild(row);
+    }
+
+    oldCredsSection.hidden = false;
+  }
+
   // "Verify" button: populates Certification Map from Current Credentials,
   // and Other Exams from Exam Transcript
   verifyBtn.addEventListener("click", async () => {
@@ -893,6 +985,7 @@
     verifyStatus.className = "verify-status loading";
     verifyOwner.textContent = "";
     verifySource.textContent = "";
+    oldCredsSection.hidden = true;
     verifyBtn.disabled = true;
 
     try {
@@ -918,8 +1011,23 @@
         throw new Error("No current credentials found on the page");
       }
 
-      const { matched: matchedCodes } = matchCredentialsToExams(credentials);
+      const { matched: matchedCodes, unmatched: unmatchedCreds } = matchCredentialsToExams(credentials);
       applyMatchedExams(matchedCodes);
+
+      const filteredOldCreds = unmatchedCreds.filter((cred) => {
+        const credNorm = normalizeCredName(cred.name || "");
+        for (const product of PRODUCTS) {
+          const productNorm = product.name.toLowerCase();
+          for (const lvl of product.levels) {
+            const levelNorm = lvl.name.toLowerCase();
+            if (credNorm.includes(levelNorm) && credNorm.includes(productNorm)) {
+              if (evaluateLevel(lvl.rule, passedExams).achieved) return false;
+            }
+          }
+        }
+        return true;
+      });
+      renderOldCredentials(filteredOldCreds);
 
       const transcriptExams = extractExamTranscript(doc);
       const { unmatched } = matchExamCodes(transcriptExams);

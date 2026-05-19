@@ -36,10 +36,7 @@ Check or uncheck exams in the left panel. The certification map on the right upd
 
 ## Deploying a New Version
 
-On each deploy, update the version number in two places to trigger automatic browser refresh for returning users:
-
-1. Update the number in `version.txt`
-2. Update the `APP_VERSION` variable in the inline `<script>` in `index.html` to match
+On each deploy, bump the number in `version.txt` to trigger automatic browser refresh for returning users. No other changes needed -- the app compares the fetched version against `sessionStorage` and reloads if they differ.
 
 ## Tech Stack
 

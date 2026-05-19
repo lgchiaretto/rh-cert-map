@@ -7,6 +7,8 @@
 }
 
 :root {
+  --font-sans: "Red Hat Text", system-ui, -apple-system, sans-serif;
+  --font-mono: "Red Hat Mono", monospace;
   --bg-primary: #f2f2f2;
   --bg-surface: #ffffff;
   --text-accent: #ee0000;
@@ -22,6 +24,9 @@
   --node-empty-stroke: #cccccc;
   --tooltip-bg: #000000;
   --tooltip-text: #ffffff;
+  --color-partial: #e67e22;
+  --color-fresh: #28a745;
+  --color-expired: #dc3545;
   --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   --radius: 8px;
   --transition: 0.25s ease;
@@ -43,6 +48,9 @@
   --node-empty-stroke: #555555;
   --tooltip-bg: #ffffff;
   --tooltip-text: #000000;
+  --color-partial: #f39c12;
+  --color-fresh: #2ecc71;
+  --color-expired: #e74c3c;
   --shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -51,7 +59,7 @@ html {
 }
 
 body {
-  font-family: "Red Hat Text", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.5;
@@ -72,7 +80,7 @@ header {
 }
 
 header h1 {
-  font-family: "Red Hat Text", system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -155,7 +163,7 @@ main {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 0.9rem;
-  font-family: "Red Hat Mono", monospace;
+  font-family: var(--font-mono);
   background: var(--bg-primary);
   color: var(--text-primary);
   outline: none;
@@ -172,7 +180,7 @@ main {
 
 .verify-row button {
   padding: 0.55rem 0.85rem;
-  font-family: "Red Hat Text", system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   font-weight: 600;
   border: none;
@@ -187,8 +195,25 @@ main {
 }
 
 .verify-row button:disabled {
-  opacity: 0.5;
+  opacity: 0.7;
   cursor: not-allowed;
+}
+
+.verify-row button:disabled::after {
+  content: "";
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-left: 0.4em;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 #verify-btn {
@@ -291,7 +316,7 @@ main {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-size: 0.9rem;
-  font-family: "Red Hat Text", system-ui, sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg-primary);
   color: var(--text-primary);
   outline: none;
@@ -330,7 +355,7 @@ main {
   border: none;
   background: none;
   cursor: pointer;
-  font-family: "Red Hat Text", system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
@@ -402,7 +427,7 @@ main {
 }
 
 .exam-item label .exam-code {
-  font-family: "Red Hat Mono", monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -413,7 +438,7 @@ main {
 
 #clear-all {
   padding: 0.45rem 0.75rem;
-  font-family: "Red Hat Text", system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.82rem;
   background: none;
   border: 1px solid var(--border);
@@ -489,16 +514,16 @@ main {
 
 .level-node.partial {
   fill: var(--node-empty-fill);
-  stroke: #e67e22;
+  stroke: var(--color-partial);
 }
 
 .partial-fill {
-  fill: #e67e22;
+  fill: var(--color-partial);
   opacity: 0.85;
 }
 
 .level-label.partial {
-  fill: #e67e22;
+  fill: var(--color-partial);
   font-weight: 500;
 }
 
@@ -517,7 +542,7 @@ main {
 }
 
 .level-label {
-  font-family: "Red Hat Text", system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   fill: var(--text-secondary);
   text-anchor: middle;
@@ -588,12 +613,12 @@ main {
 }
 
 .date-fresh {
-  background: #28a745;
+  background: var(--color-fresh);
   color: #fff;
 }
 
 .date-expired {
-  background: #dc3545;
+  background: var(--color-expired);
   color: #fff;
 }
 

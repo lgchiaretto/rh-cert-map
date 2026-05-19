@@ -11,12 +11,17 @@
   <link rel="stylesheet" href="style.css">
   <script>
     (function() {
-      var APP_VERSION = "1";
+      var KEY = "rh-cert-map-version";
       fetch("version.txt?t=" + Date.now())
         .then(function(r) { return r.text(); })
         .then(function(v) {
-          if (v.trim() !== APP_VERSION) {
-            location.reload(true);
+          var latest = v.trim();
+          var cached = sessionStorage.getItem(KEY);
+          if (cached && cached !== latest) {
+            sessionStorage.setItem(KEY, latest);
+            location.reload();
+          } else {
+            sessionStorage.setItem(KEY, latest);
           }
         })
         .catch(function() {});

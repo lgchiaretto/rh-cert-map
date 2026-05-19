@@ -3,55 +3,33 @@
 
   // ── Data ──────────────────────────────────────────────────────────────────
 
+  // Rule types: "any" = pass any one, "all" = pass all, "threshold" = required + N specialist
+  function evaluateLevel(rule, p) {
+    if (rule.type === "any") {
+      const achieved = rule.codes.some((c) => p.has(c));
+      return { achieved, progress: achieved ? 1 : 0 };
+    }
+    if (rule.type === "all") {
+      const count = rule.codes.filter((c) => p.has(c)).length;
+      return { achieved: count === rule.codes.length, progress: count / rule.codes.length };
+    }
+    // "threshold": all required + minSpecialist from specialist pool
+    const reqCount = rule.required.filter((c) => p.has(c)).length;
+    const specCount = Math.min(rule.minSpecialist, rule.specialist.filter((c) => p.has(c)).length);
+    const needed = rule.required.length + rule.minSpecialist;
+    const achieved = reqCount === rule.required.length && specCount >= rule.minSpecialist;
+    return { achieved, progress: Math.min(1, (reqCount + specCount) / needed) };
+  }
+
   const PRODUCTS = [
     {
       name: "OpenShift",
       levels: [
-        {
-          name: "Technologist",
-          codes: ["EX180", "EX156"],
-          check: (p) => p.has("EX180") || p.has("EX156"),
-          progress: (p) => (p.has("EX180") || p.has("EX156")) ? 1 : 0,
-          hint: "Pass EX180 or EX156",
-        },
-        {
-          name: "System Administrator",
-          codes: ["EX280"],
-          check: (p) => p.has("EX280"),
-          progress: (p) => p.has("EX280") ? 1 : 0,
-          hint: "Pass EX280",
-        },
-        {
-          name: "Engineer",
-          codes: ["EX280", "EX380"],
-          check: (p) => p.has("EX280") && p.has("EX380"),
-          progress: (p) => ([p.has("EX280"), p.has("EX380")].filter(Boolean).length) / 2,
-          hint: "Pass EX280 + EX380",
-        },
-        {
-          name: "Specialist",
-          codes: ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"],
-          check: (p) =>
-            ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"].some((e) => p.has(e)),
-          progress: (p) =>
-            ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"].some((e) => p.has(e)) ? 1 : 0,
-          hint: "Pass any specialist exam (EX316, EX336, EX370, EX430, EX432, EX229, or EX480)",
-        },
-        {
-          name: "Architect",
-          codes: ["EX280", "EX380", "EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"],
-          check: (p) =>
-            p.has("EX280") &&
-            p.has("EX380") &&
-            ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"].filter((e) => p.has(e)).length >= 3,
-          progress: (p) => {
-            const needed = 5; // EX280 + EX380 + 3 specialist
-            let count = (p.has("EX280") ? 1 : 0) + (p.has("EX380") ? 1 : 0);
-            count += Math.min(3, ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"].filter((e) => p.has(e)).length);
-            return Math.min(1, count / needed);
-          },
-          hint: "Pass EX280 + EX380 + at least 3 specialist exams",
-        },
+        { name: "Technologist", rule: { type: "any", codes: ["EX180", "EX156"] }, hint: "Pass EX180 or EX156" },
+        { name: "System Administrator", rule: { type: "all", codes: ["EX280"] }, hint: "Pass EX280" },
+        { name: "Engineer", rule: { type: "all", codes: ["EX280", "EX380"] }, hint: "Pass EX280 + EX380" },
+        { name: "Specialist", rule: { type: "any", codes: ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"] }, hint: "Pass any specialist exam (EX316, EX336, EX370, EX430, EX432, EX229, or EX480)" },
+        { name: "Architect", rule: { type: "threshold", required: ["EX280", "EX380"], specialist: ["EX316", "EX336", "EX370", "EX430", "EX432", "EX229", "EX480"], minSpecialist: 3 }, hint: "Pass EX280 + EX380 + at least 3 specialist exams" },
       ],
       exams: [
         { code: "EX180", name: "Red Hat Certified Technologist in OpenShift" },
@@ -70,44 +48,10 @@
     {
       name: "Enterprise Linux",
       levels: [
-        {
-          name: "System Administrator",
-          codes: ["EX200"],
-          check: (p) => p.has("EX200"),
-          progress: (p) => p.has("EX200") ? 1 : 0,
-          hint: "Pass EX200 (RHCSA)",
-        },
-        {
-          name: "Engineer",
-          codes: ["EX200", "EX342"],
-          check: (p) => p.has("EX200") && p.has("EX342"),
-          progress: (p) => ([p.has("EX200"), p.has("EX342")].filter(Boolean).length) / 2,
-          hint: "Pass EX200 + EX342",
-        },
-        {
-          name: "Specialist",
-          codes: ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"],
-          check: (p) =>
-            ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"].some((e) => p.has(e)),
-          progress: (p) =>
-            ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"].some((e) => p.has(e)) ? 1 : 0,
-          hint: "Pass any specialist exam (EX210, EX260, EX358, EX362, EX403, EX415, EX436, or EX442)",
-        },
-        {
-          name: "Architect",
-          codes: ["EX200", "EX342", "EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"],
-          check: (p) =>
-            p.has("EX200") &&
-            p.has("EX342") &&
-            ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"].filter((e) => p.has(e)).length >= 3,
-          progress: (p) => {
-            const needed = 5;
-            let count = (p.has("EX200") ? 1 : 0) + (p.has("EX342") ? 1 : 0);
-            count += Math.min(3, ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"].filter((e) => p.has(e)).length);
-            return Math.min(1, count / needed);
-          },
-          hint: "Pass EX200 + EX342 + at least 3 specialist exams",
-        },
+        { name: "System Administrator", rule: { type: "all", codes: ["EX200"] }, hint: "Pass EX200 (RHCSA)" },
+        { name: "Engineer", rule: { type: "all", codes: ["EX200", "EX342"] }, hint: "Pass EX200 + EX342" },
+        { name: "Specialist", rule: { type: "any", codes: ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"] }, hint: "Pass any specialist exam (EX210, EX260, EX358, EX362, EX403, EX415, EX436, or EX442)" },
+        { name: "Architect", rule: { type: "threshold", required: ["EX200", "EX342"], specialist: ["EX210", "EX260", "EX358", "EX362", "EX403", "EX415", "EX436", "EX442"], minSpecialist: 3 }, hint: "Pass EX200 + EX342 + at least 3 specialist exams" },
       ],
       exams: [
         { code: "EX200", name: "Red Hat Certified System Administrator (RHCSA)" },
@@ -125,44 +69,10 @@
     {
       name: "Ansible",
       levels: [
-        {
-          name: "System Administrator",
-          codes: ["EX200"],
-          check: (p) => p.has("EX200"),
-          progress: (p) => p.has("EX200") ? 1 : 0,
-          hint: "Pass EX200 (RHCSA)",
-        },
-        {
-          name: "Engineer",
-          codes: ["EX200", "EX294"],
-          check: (p) => p.has("EX200") && p.has("EX294"),
-          progress: (p) => ([p.has("EX200"), p.has("EX294")].filter(Boolean).length) / 2,
-          hint: "Pass EX200 + EX294",
-        },
-        {
-          name: "Specialist",
-          codes: ["EX374", "EX417", "EX457", "EX467"],
-          check: (p) =>
-            ["EX374", "EX417", "EX457", "EX467"].some((e) => p.has(e)),
-          progress: (p) =>
-            ["EX374", "EX417", "EX457", "EX467"].some((e) => p.has(e)) ? 1 : 0,
-          hint: "Pass any specialist exam (EX374, EX417, EX457, or EX467)",
-        },
-        {
-          name: "Architect",
-          codes: ["EX200", "EX294", "EX374", "EX417", "EX457", "EX467"],
-          check: (p) =>
-            p.has("EX200") &&
-            p.has("EX294") &&
-            ["EX374", "EX417", "EX457", "EX467"].filter((e) => p.has(e)).length >= 3,
-          progress: (p) => {
-            const needed = 5;
-            let count = (p.has("EX200") ? 1 : 0) + (p.has("EX294") ? 1 : 0);
-            count += Math.min(3, ["EX374", "EX417", "EX457", "EX467"].filter((e) => p.has(e)).length);
-            return Math.min(1, count / needed);
-          },
-          hint: "Pass EX200 + EX294 + at least 3 specialist exams",
-        },
+        { name: "System Administrator", rule: { type: "all", codes: ["EX200"] }, hint: "Pass EX200 (RHCSA)" },
+        { name: "Engineer", rule: { type: "all", codes: ["EX200", "EX294"] }, hint: "Pass EX200 + EX294" },
+        { name: "Specialist", rule: { type: "any", codes: ["EX374", "EX417", "EX457", "EX467"] }, hint: "Pass any specialist exam (EX374, EX417, EX457, or EX467)" },
+        { name: "Architect", rule: { type: "threshold", required: ["EX200", "EX294"], specialist: ["EX374", "EX417", "EX457", "EX467"], minSpecialist: 3 }, hint: "Pass EX200 + EX294 + at least 3 specialist exams" },
       ],
       exams: [
         { code: "EX200", name: "Red Hat Certified System Administrator (RHCSA)" },
@@ -176,44 +86,10 @@
     {
       name: "Cloud-Native Applications",
       levels: [
-        {
-          name: "Developer",
-          codes: ["EX188"],
-          check: (p) => p.has("EX188"),
-          progress: (p) => p.has("EX188") ? 1 : 0,
-          hint: "Pass EX188",
-        },
-        {
-          name: "Engineer",
-          codes: ["EX188", "EX288"],
-          check: (p) => p.has("EX188") && p.has("EX288"),
-          progress: (p) => ([p.has("EX188"), p.has("EX288")].filter(Boolean).length) / 2,
-          hint: "Pass EX188 + EX288",
-        },
-        {
-          name: "Specialist",
-          codes: ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"],
-          check: (p) =>
-            ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"].some((e) => p.has(e)),
-          progress: (p) =>
-            ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"].some((e) => p.has(e)) ? 1 : 0,
-          hint: "Pass any specialist exam (EX183, EX221, EX240, EX248, EX328, EX378, or EX482)",
-        },
-        {
-          name: "Architect",
-          codes: ["EX188", "EX288", "EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"],
-          check: (p) =>
-            p.has("EX188") &&
-            p.has("EX288") &&
-            ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"].filter((e) => p.has(e)).length >= 3,
-          progress: (p) => {
-            const needed = 5;
-            let count = (p.has("EX188") ? 1 : 0) + (p.has("EX288") ? 1 : 0);
-            count += Math.min(3, ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"].filter((e) => p.has(e)).length);
-            return Math.min(1, count / needed);
-          },
-          hint: "Pass EX188 + EX288 + at least 3 specialist exams",
-        },
+        { name: "Developer", rule: { type: "all", codes: ["EX188"] }, hint: "Pass EX188" },
+        { name: "Engineer", rule: { type: "all", codes: ["EX188", "EX288"] }, hint: "Pass EX188 + EX288" },
+        { name: "Specialist", rule: { type: "any", codes: ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"] }, hint: "Pass any specialist exam (EX183, EX221, EX240, EX248, EX328, EX378, or EX482)" },
+        { name: "Architect", rule: { type: "threshold", required: ["EX188", "EX288"], specialist: ["EX183", "EX221", "EX240", "EX248", "EX328", "EX378", "EX482"], minSpecialist: 3 }, hint: "Pass EX188 + EX288 + at least 3 specialist exams" },
       ],
       exams: [
         { code: "EX188", name: "Red Hat Certified Developer in Cloud-native Applications" },
@@ -230,19 +106,20 @@
     {
       name: "AI",
       levels: [
-        {
-          name: "Developer",
-          codes: ["EX267"],
-          check: (p) => p.has("EX267"),
-          progress: (p) => p.has("EX267") ? 1 : 0,
-          hint: "Pass EX267",
-        },
+        { name: "Developer", rule: { type: "all", codes: ["EX267"] }, hint: "Pass EX267" },
       ],
       exams: [
         { code: "EX267", name: "Red Hat Certified Developer in AI" },
       ],
     },
   ];
+
+  // Derive codes array from rule for tooltip display
+  function getLevelCodes(lvl) {
+    const r = lvl.rule;
+    if (r.type === "threshold") return [...r.required, ...r.specialist];
+    return r.codes;
+  }
 
   const STORAGE_KEY = "redhat-cert-map-passed";
 
@@ -310,14 +187,7 @@
           }
           syncSharedCheckboxes(exam.code, cb.checked);
           saveState();
-          renderMap();
-        });
-
-        item.addEventListener("click", (e) => {
-          if (e.target !== cb) {
-            cb.checked = !cb.checked;
-            cb.dispatchEvent(new Event("change"));
-          }
+          updateMap();
         });
 
         item.appendChild(cb);
@@ -358,7 +228,7 @@
     document.querySelectorAll('#exam-list input[type="checkbox"]').forEach((cb) => {
       cb.checked = false;
     });
-    renderMap();
+    updateMap();
   });
 
   // ── Certification Map Rendering (SVG) ─────────────────────────────────────
@@ -380,14 +250,19 @@
       checkScale: narrow ? 0.7 : 1,
       arrowSize: narrow ? 4 : 5,
       hoverWidth: narrow ? 24 : 18,
+      hoverExtra: narrow ? 12 : 4,
     };
   }
 
-  function renderMap() {
+  // Stores references to mutable SVG elements for incremental updates
+  let mapRefs = null;
+
+  function buildMap() {
     mapEl.innerHTML = "";
     const s = getMapSizes();
+    mapRefs = [];
 
-    PRODUCTS.forEach((product) => {
+    PRODUCTS.forEach((product, pIdx) => {
       const row = document.createElement("div");
       row.className = "product-row";
 
@@ -406,9 +281,10 @@
       const svg = document.createElementNS(SVG_NS, "svg");
       svg.setAttribute("viewBox", `0 0 ${svgWidth} ${s.rowHeight}`);
       svg.setAttribute("height", s.rowHeight);
+      svg.setAttribute("role", "img");
+      svg.setAttribute("aria-label", `${product.name} certification track`);
 
-      const achieved = product.levels.map((lvl) => lvl.check(passedExams));
-      const progressVals = product.levels.map((lvl) => lvl.progress(passedExams));
+      const productRef = { connectors: [], arrows: [], levels: [] };
 
       for (let i = 0; i < levelCount - 1; i++) {
         const x1 = s.paddingLeft + i * gap + s.nodeRadius;
@@ -421,8 +297,8 @@
         line.setAttribute("y2", s.nodeY);
         line.setAttribute("stroke-width", "2");
         line.classList.add("level-connector");
-        if (achieved[i] && achieved[i + 1]) line.classList.add("achieved");
         svg.appendChild(line);
+        productRef.connectors.push(line);
 
         const mx = (x1 + x2) / 2;
         const arrow = document.createElementNS(SVG_NS, "polygon");
@@ -431,8 +307,8 @@
           `${mx + s.arrowSize},${s.nodeY} ${mx - s.arrowSize},${s.nodeY - s.arrowSize} ${mx - s.arrowSize},${s.nodeY + s.arrowSize}`
         );
         arrow.classList.add("arrowhead");
-        if (achieved[i] && achieved[i + 1]) arrow.classList.add("achieved");
         svg.appendChild(arrow);
+        productRef.arrows.push(arrow);
 
         const hoverLine = document.createElementNS(SVG_NS, "line");
         hoverLine.setAttribute("x1", x1);
@@ -447,8 +323,7 @@
         hoverLine.addEventListener("mouseleave", hideTooltip);
         hoverLine.addEventListener("touchstart", (e) => {
           e.preventDefault();
-          const touch = e.touches[0];
-          showTooltip(touch, nextLevel.hint);
+          showTooltip(e.touches[0], nextLevel.hint);
           setTimeout(hideTooltip, 2500);
         }, { passive: false });
         svg.appendChild(hoverLine);
@@ -456,112 +331,91 @@
 
       product.levels.forEach((lvl, i) => {
         const cx = s.paddingLeft + i * gap;
-        const prog = progressVals[i];
-        const isPartial = !achieved[i] && prog > 0 && prog < 1;
+        const clipId = `clip-${product.name.replace(/\s+/g, "")}-${i}`;
 
-        // Background circle
         const circle = document.createElementNS(SVG_NS, "circle");
         circle.setAttribute("cx", cx);
         circle.setAttribute("cy", s.nodeY);
         circle.setAttribute("r", s.nodeRadius);
         circle.setAttribute("stroke-width", "2.5");
         circle.classList.add("level-node");
-        if (achieved[i]) {
-          circle.classList.add("achieved");
-        } else if (isPartial) {
-          circle.classList.add("partial");
-        } else {
-          circle.classList.add("not-achieved");
-        }
+        const titleEl = document.createElementNS(SVG_NS, "title");
+        titleEl.textContent = `${product.name} — ${lvl.name}`;
+        circle.appendChild(titleEl);
         svg.appendChild(circle);
 
-        // Partial fill: clip a rectangle to the circle showing progress from bottom
-        if (isPartial) {
-          const clipId = `clip-${product.name.replace(/\s+/g, "")}-${i}`;
-          const defs = document.createElementNS(SVG_NS, "defs");
-          const clipPath = document.createElementNS(SVG_NS, "clipPath");
-          clipPath.setAttribute("id", clipId);
-          const clipCircle = document.createElementNS(SVG_NS, "circle");
-          clipCircle.setAttribute("cx", cx);
-          clipCircle.setAttribute("cy", s.nodeY);
-          clipCircle.setAttribute("r", s.nodeRadius - 1.5);
-          clipPath.appendChild(clipCircle);
-          defs.appendChild(clipPath);
-          svg.appendChild(defs);
+        // Partial fill elements (always created, hidden when not needed)
+        const defs = document.createElementNS(SVG_NS, "defs");
+        const clipPath = document.createElementNS(SVG_NS, "clipPath");
+        clipPath.setAttribute("id", clipId);
+        const clipCircle = document.createElementNS(SVG_NS, "circle");
+        clipCircle.setAttribute("cx", cx);
+        clipCircle.setAttribute("cy", s.nodeY);
+        clipCircle.setAttribute("r", s.nodeRadius - 1.5);
+        clipPath.appendChild(clipCircle);
+        defs.appendChild(clipPath);
+        svg.appendChild(defs);
 
-          const fillHeight = (s.nodeRadius * 2) * prog;
-          const fillY = s.nodeY + s.nodeRadius - fillHeight;
-          const fillRect = document.createElementNS(SVG_NS, "rect");
-          fillRect.setAttribute("x", cx - s.nodeRadius);
-          fillRect.setAttribute("y", fillY);
-          fillRect.setAttribute("width", s.nodeRadius * 2);
-          fillRect.setAttribute("height", fillHeight);
-          fillRect.setAttribute("clip-path", `url(#${clipId})`);
-          fillRect.classList.add("partial-fill");
-          svg.appendChild(fillRect);
-        }
+        const fillRect = document.createElementNS(SVG_NS, "rect");
+        fillRect.setAttribute("x", cx - s.nodeRadius);
+        fillRect.setAttribute("width", s.nodeRadius * 2);
+        fillRect.setAttribute("clip-path", `url(#${clipId})`);
+        fillRect.classList.add("partial-fill");
+        fillRect.style.display = "none";
+        svg.appendChild(fillRect);
 
-        if (achieved[i]) {
-          const check = document.createElementNS(SVG_NS, "path");
-          const sc = s.checkScale;
-          const x = cx;
-          const y = s.nodeY;
-          check.setAttribute(
-            "d",
-            `M${x - 5 * sc} ${y + 1 * sc} L${x - 1 * sc} ${y + 5 * sc} L${x + 6 * sc} ${y - 4 * sc}`
-          );
-          check.setAttribute("fill", "none");
-          check.setAttribute("stroke", "#fff");
-          check.setAttribute("stroke-width", 2.5 * sc);
-          check.setAttribute("stroke-linecap", "round");
-          check.setAttribute("stroke-linejoin", "round");
-          svg.appendChild(check);
-        }
+        // Checkmark (always created, hidden when not needed)
+        const check = document.createElementNS(SVG_NS, "path");
+        const sc = s.checkScale;
+        check.setAttribute(
+          "d",
+          `M${cx - 5 * sc} ${s.nodeY + 1 * sc} L${cx - 1 * sc} ${s.nodeY + 5 * sc} L${cx + 6 * sc} ${s.nodeY - 4 * sc}`
+        );
+        check.setAttribute("fill", "none");
+        check.setAttribute("stroke", "#fff");
+        check.setAttribute("stroke-width", 2.5 * sc);
+        check.setAttribute("stroke-linecap", "round");
+        check.setAttribute("stroke-linejoin", "round");
+        check.style.display = "none";
+        svg.appendChild(check);
 
+        // Label text
         const text = document.createElementNS(SVG_NS, "text");
         text.setAttribute("x", cx);
         text.setAttribute("y", s.nodeY + s.labelOffsetY);
         text.classList.add("level-label");
-        if (achieved[i]) {
-          text.classList.add("achieved");
-        } else if (isPartial) {
-          text.classList.add("partial");
-        }
 
         const words = lvl.name.split(" ");
         if (words.length > 1) {
           const mid = Math.ceil(words.length / 2);
-          const line1 = words.slice(0, mid).join(" ");
-          const line2 = words.slice(mid).join(" ");
           const tspan1 = document.createElementNS(SVG_NS, "tspan");
           tspan1.setAttribute("x", cx);
           tspan1.setAttribute("dy", "0");
-          tspan1.textContent = line1;
+          tspan1.textContent = words.slice(0, mid).join(" ");
           const tspan2 = document.createElementNS(SVG_NS, "tspan");
           tspan2.setAttribute("x", cx);
           tspan2.setAttribute("dy", "1.15em");
-          tspan2.textContent = line2;
+          tspan2.textContent = words.slice(mid).join(" ");
           text.appendChild(tspan1);
           text.appendChild(tspan2);
         } else {
           text.textContent = lvl.name;
         }
 
-        if (isPartial) {
-          const tspanPartial = document.createElementNS(SVG_NS, "tspan");
-          tspanPartial.setAttribute("x", cx);
-          tspanPartial.setAttribute("dy", "1.15em");
-          tspanPartial.textContent = "(in progress)";
-          text.appendChild(tspanPartial);
-        }
+        const tspanPartial = document.createElementNS(SVG_NS, "tspan");
+        tspanPartial.setAttribute("x", cx);
+        tspanPartial.setAttribute("dy", "1.15em");
+        tspanPartial.textContent = "(in progress)";
+        tspanPartial.style.display = "none";
+        text.appendChild(tspanPartial);
 
         svg.appendChild(text);
 
-        // Hover target for circle tooltip
+        // Hover target
         const hoverCircle = document.createElementNS(SVG_NS, "circle");
         hoverCircle.setAttribute("cx", cx);
         hoverCircle.setAttribute("cy", s.nodeY);
-        hoverCircle.setAttribute("r", s.nodeRadius + 4);
+        hoverCircle.setAttribute("r", s.nodeRadius + s.hoverExtra);
         hoverCircle.setAttribute("fill", "transparent");
         hoverCircle.setAttribute("stroke", "none");
         hoverCircle.style.cursor = "pointer";
@@ -570,16 +424,72 @@
         hoverCircle.addEventListener("mouseleave", hideTooltip);
         hoverCircle.addEventListener("touchstart", (e) => {
           e.preventDefault();
-          const touch = e.touches[0];
-          showTooltip(touch, buildCircleTooltip(lvl, product));
+          showTooltip(e.touches[0], buildCircleTooltip(lvl, product));
           setTimeout(hideTooltip, 3000);
         }, { passive: false });
         svg.appendChild(hoverCircle);
+
+        productRef.levels.push({ circle, fillRect, check, text, tspanPartial, nodeY: s.nodeY, nodeRadius: s.nodeRadius });
       });
 
       row.appendChild(svg);
       mapEl.appendChild(row);
+      mapRefs.push(productRef);
     });
+
+    updateMap();
+  }
+
+  function updateMap() {
+    if (!mapRefs) return;
+
+    PRODUCTS.forEach((product, pIdx) => {
+      const ref = mapRefs[pIdx];
+      if (!ref) return;
+      const evaluations = product.levels.map((lvl) => evaluateLevel(lvl.rule, passedExams));
+
+      // Update connectors and arrows
+      for (let i = 0; i < ref.connectors.length; i++) {
+        const both = evaluations[i].achieved && evaluations[i + 1].achieved;
+        ref.connectors[i].classList.toggle("achieved", both);
+        ref.arrows[i].classList.toggle("achieved", both);
+      }
+
+      // Update level nodes
+      evaluations.forEach((ev, i) => {
+        const lRef = ref.levels[i];
+        const isPartial = !ev.achieved && ev.progress > 0 && ev.progress < 1;
+
+        lRef.circle.classList.toggle("achieved", ev.achieved);
+        lRef.circle.classList.toggle("partial", isPartial);
+        lRef.circle.classList.toggle("not-achieved", !ev.achieved && !isPartial);
+
+        // Partial fill
+        if (isPartial) {
+          const fillHeight = (lRef.nodeRadius * 2) * ev.progress;
+          const fillY = lRef.nodeY + lRef.nodeRadius - fillHeight;
+          lRef.fillRect.setAttribute("y", fillY);
+          lRef.fillRect.setAttribute("height", fillHeight);
+          lRef.fillRect.style.display = "";
+        } else {
+          lRef.fillRect.style.display = "none";
+        }
+
+        // Checkmark
+        lRef.check.style.display = ev.achieved ? "" : "none";
+
+        // Label classes
+        lRef.text.classList.toggle("achieved", ev.achieved);
+        lRef.text.classList.toggle("partial", isPartial);
+
+        // "(in progress)" tspan
+        lRef.tspanPartial.style.display = isPartial ? "" : "none";
+      });
+    });
+  }
+
+  function renderMap() {
+    buildMap();
   }
 
   // ── Tooltip ───────────────────────────────────────────────────────────────
@@ -597,7 +507,7 @@
   }
 
   function buildCircleTooltip(lvl, product) {
-    const codes = lvl.codes || [];
+    const codes = getLevelCodes(lvl);
     const examMap = {};
     product.exams.forEach((ex) => { examMap[ex.code] = ex.name; });
 
@@ -707,22 +617,25 @@
     }
 
     const target = VERIFY_URL + id;
-    let html = null;
+    const controller = new AbortController();
 
-    for (const buildUrl of CORS_PROXIES) {
-      try {
-        const resp = await fetch(buildUrl(target));
-        if (resp.ok) {
-          html = await resp.text();
-          if (html && html.length > 200) break;
-        }
-      } catch {
-        // proxy unavailable, try next
-      }
-      html = null;
-    }
+    const attempts = CORS_PROXIES.map((buildUrl) =>
+      fetch(buildUrl(target), { signal: controller.signal })
+        .then((resp) => {
+          if (!resp.ok) return Promise.reject(new Error("not ok"));
+          return resp.text();
+        })
+        .then((text) => {
+          if (!text || text.length <= 200) return Promise.reject(new Error("too short"));
+          return text;
+        })
+    );
 
-    if (!html) {
+    let html;
+    try {
+      html = await Promise.any(attempts);
+      controller.abort();
+    } catch {
       throw new Error("Failed to reach verification service (all proxies failed)");
     }
 
@@ -837,10 +750,28 @@
 
   const CREDENTIAL_ALIASES = {
     "red hat certified specialist in linux performance tuning": "EX442",
+    "red hat certified specialist in linux diagnostics and troubleshooting": "EX342",
+    "red hat certified specialist in ansible automation": "EX294",
+    "red hat certified specialist in openshift administration": "EX280",
+    "red hat certified specialist in containers and kubernetes": "EX180",
+    "red hat certified specialist in containers": "EX188",
   };
 
   function normalizeCredName(name) {
-    return name.toLowerCase().replace(/\s*\(rhcsa\)\s*/g, "").trim();
+    return name.toLowerCase().replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim();
+  }
+
+  function wordSet(str) {
+    return new Set(str.split(/\s+/).filter((w) => w.length > 2));
+  }
+
+  function wordOverlap(a, b) {
+    const setA = wordSet(a);
+    const setB = wordSet(b);
+    if (setA.size === 0 || setB.size === 0) return 0;
+    let common = 0;
+    for (const w of setA) { if (setB.has(w)) common++; }
+    return common / Math.max(setA.size, setB.size);
   }
 
   function matchCredentialsToExams(credentials) {
@@ -862,7 +793,7 @@
         continue;
       }
 
-      // Exact match first
+      // Exact match
       for (const exam of allExams) {
         if (credNorm === normalizeCredName(exam.name)) {
           matched.add(exam.code);
@@ -871,22 +802,22 @@
       }
       if (found) continue;
 
-      // Substring match: pick the shortest (most specific) exam name
+      // Word-overlap scoring: require >= 70% overlap
       let bestMatch = null;
-      let bestLen = Infinity;
+      let bestScore = 0;
       for (const exam of allExams) {
         const examNorm = normalizeCredName(exam.name);
-        if (credNorm.includes(examNorm) || examNorm.includes(credNorm)) {
-          if (examNorm.length < bestLen) {
-            bestLen = examNorm.length;
-            bestMatch = exam.code;
-          }
+        const score = wordOverlap(credNorm, examNorm);
+        if (score >= 0.7 && score > bestScore) {
+          bestScore = score;
+          bestMatch = exam.code;
         }
       }
       if (bestMatch) {
         matched.add(bestMatch);
       } else {
         unmatched.push(cred);
+        console.debug("[rh-cert-map] Unmatched credential:", credName);
       }
     }
     return { matched, unmatched };
@@ -901,7 +832,7 @@
       cb.checked = false;
     });
     matchedCodes.forEach((code) => syncSharedCheckboxes(code, true));
-    renderMap();
+    updateMap();
   }
 
   // ── Other Exams Table ───────────────────────────────────────────────────
@@ -961,7 +892,7 @@
     verifyStatus.textContent = "Fetching certifications...";
     verifyStatus.className = "verify-status loading";
     verifyOwner.textContent = "";
-    verifySource.innerHTML = "";
+    verifySource.textContent = "";
     verifyBtn.disabled = true;
 
     try {
@@ -972,7 +903,15 @@
       }
 
       const sourceUrl = "https://rhtapps.redhat.com/verify/?certId=" + certId.trim();
-      verifySource.innerHTML = 'Data is obtained from <a href="' + sourceUrl + '" target="_blank" rel="noopener noreferrer">this link</a>';
+      verifySource.textContent = "";
+      const sourceText = document.createTextNode("Data is obtained from ");
+      const sourceLink = document.createElement("a");
+      sourceLink.href = sourceUrl;
+      sourceLink.target = "_blank";
+      sourceLink.rel = "noopener noreferrer";
+      sourceLink.textContent = "this link";
+      verifySource.appendChild(sourceText);
+      verifySource.appendChild(sourceLink);
 
       const credentials = extractCurrentCredentials(doc);
       if (credentials.length === 0) {
@@ -999,7 +938,7 @@
       verifyStatus.textContent = err.message;
       verifyStatus.className = "verify-status error";
       verifyOwner.textContent = "";
-      verifySource.innerHTML = "";
+      verifySource.textContent = "";
     } finally {
       verifyBtn.disabled = false;
     }

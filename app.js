@@ -145,81 +145,178 @@
   const examListEl = document.getElementById("exam-list");
   const searchEl = document.getElementById("exam-search");
   const clearBtn = document.getElementById("clear-all");
+  const sortToggleBtn = document.getElementById("sort-toggle");
+  const viewBtns = document.querySelectorAll(".view-btn");
 
-  // Track which exam codes already have a checkbox rendered (EX200 shared across products)
+  let currentView = "product";
+  let sortAsc = true;
+
   const renderedCheckboxes = new Map();
 
-  function buildExamList() {
-    PRODUCTS.forEach((product) => {
-      const group = document.createElement("div");
-      group.className = "exam-group";
+  const LEVEL_ORDER = ["Technologist", "Developer", "System Administrator", "Engineer", "Specialist"];
 
-      const toggle = document.createElement("button");
-      toggle.className = "group-toggle";
-      toggle.type = "button";
-      toggle.innerHTML = `<span class="chevron"></span>${product.name}`;
-      toggle.addEventListener("click", () => group.classList.toggle("collapsed"));
-      group.appendChild(toggle);
+  function getExamLevel(examName) {
+    const lower = examName.toLowerCase();
+    if (lower.includes("technologist")) return "Technologist";
+    if (lower.includes("advanced")) return "Engineer";
+    if (lower.includes("system administrator")) return "System Administrator";
+    if (lower.includes("developer")) return "Developer";
+    if (lower.includes("specialist")) return "Specialist";
+    return "Specialist";
+  }
 
-      const examsWrap = document.createElement("div");
-      examsWrap.className = "group-exams";
-
-      product.exams.forEach((exam) => {
-        const item = document.createElement("div");
-        item.className = "exam-item";
-        item.dataset.code = exam.code;
-        item.dataset.search = `${exam.code} ${exam.name}`.toLowerCase();
-
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.id = `cb-${product.name}-${exam.code}`;
-        cb.checked = passedExams.has(exam.code);
-
-        const label = document.createElement("label");
-        label.htmlFor = cb.id;
-        label.innerHTML = `<span class="exam-code">${exam.code}</span> <span class="exam-name">— ${exam.name}</span>`;
-
-        cb.addEventListener("change", () => {
-          if (cb.checked) {
-            passedExams.add(exam.code);
-          } else {
-            passedExams.delete(exam.code);
-          }
-          syncSharedCheckboxes(exam.code, cb.checked);
-          saveState();
-          updateMap();
-        });
-
-        item.appendChild(cb);
-        item.appendChild(label);
-        examsWrap.appendChild(item);
-
-        if (!renderedCheckboxes.has(exam.code)) {
-          renderedCheckboxes.set(exam.code, []);
+  function getAllExams() {
+    const seen = new Set();
+    const list = [];
+    PRODUCTS.forEach((p) => {
+      p.exams.forEach((e) => {
+        if (!seen.has(e.code)) {
+          seen.add(e.code);
+          list.push(e);
         }
-        renderedCheckboxes.get(exam.code).push(cb);
       });
+    });
+    return list;
+  }
 
-      group.appendChild(examsWrap);
-      examListEl.appendChild(group);
+  function sortExams(exams) {
+    return [...exams].sort((a, b) => {
+      const cmp = a.code.localeCompare(b.code);
+      return sortAsc ? cmp : -cmp;
+    });
+  }
+
+  function createExamItem(exam, idSuffix) {
+    const item = document.createElement("div");
+    item.className = "exam-item";
+    item.dataset.code = exam.code;
+    item.dataset.search = `${exam.code} ${exam.name}`.toLowerCase();
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = `cb-${idSuffix}-${exam.code}`;
+    cb.checked = passedExams.has(exam.code);
+
+    const label = document.createElement("label");
+    label.htmlFor = cb.id;
+    label.innerHTML = `<span class="exam-code">${exam.code}</span> <span class="exam-name">— ${exam.name}</span>`;
+
+    cb.addEventListener("change", () => {
+      if (cb.checked) {
+        passedExams.add(exam.code);
+      } else {
+        passedExams.delete(exam.code);
+      }
+      syncSharedCheckboxes(exam.code, cb.checked);
+      saveState();
+      updateMap();
+    });
+
+    item.appendChild(cb);
+    item.appendChild(label);
+
+    if (!renderedCheckboxes.has(exam.code)) {
+      renderedCheckboxes.set(exam.code, []);
+    }
+    renderedCheckboxes.get(exam.code).push(cb);
+
+    return item;
+  }
+
+  function buildGroupView(groupName, exams, idPrefix) {
+    const group = document.createElement("div");
+    group.className = "exam-group";
+
+    const toggle = document.createElement("button");
+    toggle.className = "group-toggle";
+    toggle.type = "button";
+    toggle.innerHTML = `<span class="chevron"></span>${groupName}`;
+    toggle.addEventListener("click", () => group.classList.toggle("collapsed"));
+    group.appendChild(toggle);
+
+    const examsWrap = document.createElement("div");
+    examsWrap.className = "group-exams";
+
+    const sorted = sortExams(exams);
+    sorted.forEach((exam) => {
+      examsWrap.appendChild(createExamItem(exam, idPrefix));
+    });
+
+    group.appendChild(examsWrap);
+    return group;
+  }
+
+  function renderExamList() {
+    examListEl.innerHTML = "";
+    renderedCheckboxes.clear();
+
+    if (currentView === "product") {
+      PRODUCTS.forEach((product) => {
+        const exams = product.exams;
+        examListEl.appendChild(buildGroupView(product.name, exams, product.name));
+      });
+    } else if (currentView === "level") {
+      const groups = {};
+      LEVEL_ORDER.forEach((l) => { groups[l] = []; });
+      const seen = new Set();
+      PRODUCTS.forEach((p) => {
+        p.exams.forEach((e) => {
+          if (seen.has(e.code)) return;
+          seen.add(e.code);
+          const level = getExamLevel(e.name);
+          groups[level].push(e);
+        });
+      });
+      LEVEL_ORDER.forEach((level) => {
+        if (groups[level].length > 0) {
+          examListEl.appendChild(buildGroupView(level, groups[level], level));
+        }
+      });
+    } else {
+      const allExams = sortExams(getAllExams());
+      const wrap = document.createElement("div");
+      wrap.className = "group-exams";
+      allExams.forEach((exam) => {
+        wrap.appendChild(createExamItem(exam, "flat"));
+      });
+      examListEl.appendChild(wrap);
+    }
+
+    applySearchFilter();
+  }
+
+  function applySearchFilter() {
+    const query = searchEl.value.toLowerCase().trim();
+    document.querySelectorAll(".exam-item").forEach((item) => {
+      item.classList.toggle("hidden", query !== "" && !item.dataset.search.includes(query));
     });
   }
 
   function syncSharedCheckboxes(code, checked) {
     const cbs = renderedCheckboxes.get(code);
     if (!cbs) return;
-    cbs.forEach((cb) => {
-      cb.checked = checked;
-    });
+    cbs.forEach((cb) => { cb.checked = checked; });
   }
 
-  // Search filter
-  searchEl.addEventListener("input", () => {
-    const query = searchEl.value.toLowerCase().trim();
-    document.querySelectorAll(".exam-item").forEach((item) => {
-      item.classList.toggle("hidden", query !== "" && !item.dataset.search.includes(query));
+  // View mode buttons
+  viewBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      viewBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentView = btn.dataset.view;
+      renderExamList();
     });
   });
+
+  // Sort toggle
+  sortToggleBtn.addEventListener("click", () => {
+    sortAsc = !sortAsc;
+    sortToggleBtn.textContent = sortAsc ? "A\u2192Z" : "Z\u2192A";
+    renderExamList();
+  });
+
+  // Search filter
+  searchEl.addEventListener("input", applySearchFilter);
 
   // Clear all
   clearBtn.addEventListener("click", () => {
@@ -1059,6 +1156,6 @@
 
   // ── Init ──────────────────────────────────────────────────────────────────
 
-  buildExamList();
+  renderExamList();
   renderMap();
 })();

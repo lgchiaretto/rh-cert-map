@@ -331,6 +331,56 @@ main {
   color: var(--text-secondary);
 }
 
+.view-controls {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+  align-items: center;
+}
+
+.view-btn {
+  padding: 0.3rem 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.view-btn:hover {
+  border-color: var(--text-accent);
+  color: var(--text-accent);
+}
+
+.view-btn.active {
+  background: var(--text-accent);
+  border-color: var(--text-accent);
+  color: #fff;
+}
+
+#sort-toggle {
+  margin-left: auto;
+  padding: 0.3rem 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+#sort-toggle:hover {
+  border-color: var(--text-accent);
+  color: var(--text-accent);
+}
+
 #exam-list {
   overflow-y: auto;
   flex: 1;

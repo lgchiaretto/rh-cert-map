@@ -158,10 +158,9 @@
   function getExamLevel(examName) {
     const lower = examName.toLowerCase();
     if (lower.includes("technologist")) return "Technologist";
-    if (lower.includes("advanced")) return "Engineer";
+    if (lower.includes("specialist")) return "Specialist";
     if (lower.includes("system administrator")) return "System Administrator";
     if (lower.includes("developer")) return "Developer";
-    if (lower.includes("specialist")) return "Specialist";
     return "Specialist";
   }
 

@@ -6,11 +6,8 @@
     --masthead-height: 56px;
     --sidebar-width: 320px;
     --z-dropdown: 1000;
-    --z-sticky: 1020;
-    --z-fixed: 1030;
     --z-sidebar: 1035;
     --z-masthead: 1040;
-    --z-modal-backdrop: 1050;
     --z-tooltip: 1070;
     --color-partial: #e67e22;
     --color-fresh: #28a745;
@@ -284,10 +281,6 @@ html:not(.pf-v6-theme-dark) .cert-input {
     border: 1px solid var(--pf-t--global--border--color--default);
     border-radius: var(--pf-t--global--border--radius--medium);
 }
-
-/* ===========================================
-   TABLE OVERRIDES
-   =========================================== */
 
 /* ===========================================
    SIDEBAR - Verify Section
@@ -725,6 +718,26 @@ html:not(.pf-v6-theme-dark) .cert-input {
 .expires-unknown {
     background: transparent;
     color: var(--pf-t--global--text--color--subtle);
+}
+
+/* ===========================================
+   FOOTER
+   =========================================== */
+
+.site-footer {
+    text-align: center;
+    padding: 1rem;
+    font-size: var(--pf-t--global--font--size--body--sm);
+    color: var(--pf-t--global--text--color--subtle);
+}
+
+.site-footer a {
+    color: var(--pf-t--global--text--color--link--default);
+    text-decoration: none;
+}
+
+.site-footer a:hover {
+    text-decoration: underline;
 }
 
 /* ===========================================

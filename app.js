@@ -114,6 +114,21 @@
     },
   ];
 
+  // Pre-computed deduped list of all exams across products
+  const ALL_EXAMS = (() => {
+    const seen = new Set();
+    const list = [];
+    PRODUCTS.forEach((p) => {
+      p.exams.forEach((e) => {
+        if (!seen.has(e.code)) {
+          seen.add(e.code);
+          list.push(e);
+        }
+      });
+    });
+    return list;
+  })();
+
   // Derive codes array from rule for tooltip display
   function getLevelCodes(lvl) {
     const r = lvl.rule;
@@ -165,17 +180,7 @@
   }
 
   function getAllExams() {
-    const seen = new Set();
-    const list = [];
-    PRODUCTS.forEach((p) => {
-      p.exams.forEach((e) => {
-        if (!seen.has(e.code)) {
-          seen.add(e.code);
-          list.push(e);
-        }
-      });
-    });
-    return list;
+    return ALL_EXAMS;
   }
 
   function sortExams(exams) {
@@ -229,8 +234,12 @@
     const toggle = document.createElement("button");
     toggle.className = "group-toggle";
     toggle.type = "button";
+    toggle.setAttribute("aria-expanded", "true");
     toggle.innerHTML = `<span class="chevron"></span>${groupName}`;
-    toggle.addEventListener("click", () => group.classList.toggle("collapsed"));
+    toggle.addEventListener("click", () => {
+      group.classList.toggle("collapsed");
+      toggle.setAttribute("aria-expanded", String(!group.classList.contains("collapsed")));
+    });
     group.appendChild(toggle);
 
     const examsWrap = document.createElement("div");
@@ -300,8 +309,12 @@
   // View mode buttons
   viewBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      viewBtns.forEach((b) => b.classList.remove("active"));
+      viewBtns.forEach((b) => {
+        b.classList.remove("active");
+        b.setAttribute("aria-pressed", "false");
+      });
       btn.classList.add("active");
+      btn.setAttribute("aria-pressed", "true");
       currentView = btn.dataset.view;
       renderExamList();
     });
@@ -311,11 +324,16 @@
   sortToggleBtn.addEventListener("click", () => {
     sortAsc = !sortAsc;
     sortToggleBtn.textContent = sortAsc ? "A\u2192Z" : "Z\u2192A";
+    sortToggleBtn.setAttribute("aria-label", sortAsc ? "Sort ascending" : "Sort descending");
     renderExamList();
   });
 
-  // Search filter
-  searchEl.addEventListener("input", applySearchFilter);
+  // Search filter (debounced for mobile performance)
+  let searchTimer;
+  searchEl.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(applySearchFilter, 100);
+  });
 
   // Clear all
   clearBtn.addEventListener("click", () => {
@@ -588,9 +606,7 @@
     });
   }
 
-  function renderMap() {
-    buildMap();
-  }
+  const renderMap = buildMap;
 
   // ── Tooltip ───────────────────────────────────────────────────────────────
 
@@ -691,15 +707,15 @@
   }
 
   function loadTheme() {
-    var saved = localStorage.getItem(THEME_KEY);
+    const saved = localStorage.getItem(THEME_KEY);
     if (saved === "dark" || saved === "light") return saved;
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }
 
   applyTheme(loadTheme());
 
-  themeBtn.addEventListener("click", function() {
-    var current = document.documentElement.getAttribute("data-theme");
+  themeBtn.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme");
     applyTheme(current === "dark" ? "light" : "dark");
   });
 
@@ -890,15 +906,12 @@
   function matchCredentialsToExams(credentials) {
     const matched = new Set();
     const unmatched = [];
-    const allExams = [];
-    PRODUCTS.forEach((p) => p.exams.forEach((e) => allExams.push(e)));
 
     for (const cred of credentials) {
       const credName = typeof cred === "string" ? cred : cred.name;
       const credNorm = normalizeCredName(credName);
       let found = false;
 
-      // Check aliases first
       const aliasCode = CREDENTIAL_ALIASES[credNorm];
       if (aliasCode) {
         matched.add(aliasCode);
@@ -906,8 +919,7 @@
         continue;
       }
 
-      // Exact match
-      for (const exam of allExams) {
+      for (const exam of ALL_EXAMS) {
         if (credNorm === normalizeCredName(exam.name)) {
           matched.add(exam.code);
           found = true;
@@ -915,12 +927,10 @@
       }
       if (found) continue;
 
-      // Word-overlap scoring: require >= 70% overlap
-      // Also require the role word (after "certified") matches between both
       const credRole = extractRole(credNorm);
       let bestMatch = null;
       let bestScore = 0;
-      for (const exam of allExams) {
+      for (const exam of ALL_EXAMS) {
         const examNorm = normalizeCredName(exam.name);
         const examRole = extractRole(examNorm);
         if (credRole && examRole && credRole !== examRole) continue;
@@ -934,7 +944,6 @@
         matched.add(bestMatch);
       } else {
         unmatched.push(cred);
-        console.debug("[rh-cert-map] Unmatched credential:", credName);
       }
     }
     return { matched, unmatched };
@@ -1087,6 +1096,62 @@
 
   // "Verify" button: populates Certification Map from Current Credentials,
   // and Other Exams from Exam Transcript
+
+  function showVerifySource(certId) {
+    const sourceUrl = "https://rhtapps.redhat.com/verify/?certId=" + certId.trim();
+    verifySource.textContent = "";
+    const sourceText = document.createTextNode("Data is obtained from ");
+    const sourceLink = document.createElement("a");
+    sourceLink.href = sourceUrl;
+    sourceLink.target = "_blank";
+    sourceLink.rel = "noopener noreferrer";
+    sourceLink.textContent = "this link";
+    verifySource.appendChild(sourceText);
+    verifySource.appendChild(sourceLink);
+  }
+
+  function filterAchievedCredentials(unmatchedCreds) {
+    return unmatchedCreds.filter((cred) => {
+      const credNorm = normalizeCredName(cred.name || "");
+      for (const product of PRODUCTS) {
+        const productNorm = product.name.toLowerCase();
+        for (const lvl of product.levels) {
+          const levelNorm = lvl.name.toLowerCase();
+          if (credNorm.includes(levelNorm) && credNorm.includes(productNorm)) {
+            if (evaluateLevel(lvl.rule, passedExams).achieved) return false;
+          }
+        }
+      }
+      return true;
+    });
+  }
+
+  function handleVerifySuccess(doc, certId) {
+    const credentials = extractCurrentCredentials(doc);
+    if (credentials.length === 0) {
+      throw new Error("No current credentials found on the page");
+    }
+
+    const { matched: matchedCodes, unmatched: unmatchedCreds } = matchCredentialsToExams(credentials);
+    applyMatchedExams(matchedCodes);
+
+    renderOldCredentials(filterAchievedCredentials(unmatchedCreds));
+
+    const transcriptExams = extractExamTranscript(doc);
+    const { unmatched } = matchExamCodes(transcriptExams);
+    renderOtherExams(unmatched);
+
+    const matchedCount = matchedCodes.size;
+    const total = credentials.length;
+    if (matchedCount === 0) {
+      verifyStatus.textContent = `Found ${total} credential(s) but none matched known exams`;
+      verifyStatus.className = "cert-verify-status error";
+    } else {
+      verifyStatus.textContent = `Matched ${matchedCount} of ${total} current credential(s)`;
+      verifyStatus.className = "cert-verify-status success";
+    }
+  }
+
   verifyBtn.addEventListener("click", async () => {
     const certId = certIdInput.value;
     verifyStatus.textContent = "Fetching certifications...";
@@ -1098,58 +1163,9 @@
 
     try {
       const { doc, ownerName } = await fetchPage(certId);
-
-      if (ownerName) {
-        verifyOwner.textContent = "Owner: " + ownerName;
-      }
-
-      const sourceUrl = "https://rhtapps.redhat.com/verify/?certId=" + certId.trim();
-      verifySource.textContent = "";
-      const sourceText = document.createTextNode("Data is obtained from ");
-      const sourceLink = document.createElement("a");
-      sourceLink.href = sourceUrl;
-      sourceLink.target = "_blank";
-      sourceLink.rel = "noopener noreferrer";
-      sourceLink.textContent = "this link";
-      verifySource.appendChild(sourceText);
-      verifySource.appendChild(sourceLink);
-
-      const credentials = extractCurrentCredentials(doc);
-      if (credentials.length === 0) {
-        throw new Error("No current credentials found on the page");
-      }
-
-      const { matched: matchedCodes, unmatched: unmatchedCreds } = matchCredentialsToExams(credentials);
-      applyMatchedExams(matchedCodes);
-
-      const filteredOldCreds = unmatchedCreds.filter((cred) => {
-        const credNorm = normalizeCredName(cred.name || "");
-        for (const product of PRODUCTS) {
-          const productNorm = product.name.toLowerCase();
-          for (const lvl of product.levels) {
-            const levelNorm = lvl.name.toLowerCase();
-            if (credNorm.includes(levelNorm) && credNorm.includes(productNorm)) {
-              if (evaluateLevel(lvl.rule, passedExams).achieved) return false;
-            }
-          }
-        }
-        return true;
-      });
-      renderOldCredentials(filteredOldCreds);
-
-      const transcriptExams = extractExamTranscript(doc);
-      const { unmatched } = matchExamCodes(transcriptExams);
-      renderOtherExams(unmatched);
-
-      const matchedCount = matchedCodes.size;
-      const total = credentials.length;
-      if (matchedCount === 0) {
-        verifyStatus.textContent = `Found ${total} credential(s) but none matched known exams`;
-        verifyStatus.className = "cert-verify-status error";
-      } else {
-        verifyStatus.textContent = `Matched ${matchedCount} of ${total} current credential(s)`;
-        verifyStatus.className = "cert-verify-status success";
-      }
+      if (ownerName) verifyOwner.textContent = "Owner: " + ownerName;
+      showVerifySource(certId);
+      handleVerifySuccess(doc, certId);
     } catch (err) {
       verifyStatus.textContent = err.message;
       verifyStatus.className = "cert-verify-status error";
@@ -1167,39 +1183,36 @@
 
   // ── Sidebar Toggle ──────────────────────────────────────────────────────
 
-  var navToggle = document.getElementById("nav-toggle");
-  var backdrop = document.getElementById("sidebar-backdrop");
+  const navToggleBtn = document.getElementById("nav-toggle");
+  const backdrop = document.getElementById("sidebar-backdrop");
+  const sidebarEl = document.getElementById("page-sidebar");
+  const pageEl = document.querySelector(".pf-v6-c-page");
 
   function isMobile() {
     return window.innerWidth <= 992;
   }
 
   function openSidebar() {
-    var sidebar = document.getElementById("page-sidebar");
-    var page = document.querySelector(".pf-v6-c-page");
-    if (sidebar) sidebar.classList.add("pf-m-expanded");
-    if (page) page.classList.add("pf-m-sidebar-expanded");
+    if (sidebarEl) sidebarEl.classList.add("pf-m-expanded");
+    if (pageEl) pageEl.classList.add("pf-m-sidebar-expanded");
     if (isMobile() && backdrop) backdrop.classList.add("visible");
     localStorage.setItem("sidebar_expanded", "true");
     setTimeout(renderMap, 50);
   }
 
   function closeSidebar() {
-    var sidebar = document.getElementById("page-sidebar");
-    var page = document.querySelector(".pf-v6-c-page");
-    if (sidebar) sidebar.classList.remove("pf-m-expanded");
-    if (page) page.classList.remove("pf-m-sidebar-expanded");
+    if (sidebarEl) sidebarEl.classList.remove("pf-m-expanded");
+    if (pageEl) pageEl.classList.remove("pf-m-sidebar-expanded");
     if (backdrop) backdrop.classList.remove("visible");
     localStorage.setItem("sidebar_expanded", "false");
     setTimeout(renderMap, 50);
   }
 
-  if (navToggle) {
-    navToggle.addEventListener("click", function (e) {
+  if (navToggleBtn) {
+    navToggleBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      var sidebar = document.getElementById("page-sidebar");
-      if (sidebar && sidebar.classList.contains("pf-m-expanded")) {
+      if (sidebarEl && sidebarEl.classList.contains("pf-m-expanded")) {
         closeSidebar();
       } else {
         openSidebar();
@@ -1212,15 +1225,13 @@
   }
 
   (function () {
-    var sidebar = document.getElementById("page-sidebar");
-    var page = document.querySelector(".pf-v6-c-page");
-    var savedState = localStorage.getItem("sidebar_expanded");
+    const savedState = localStorage.getItem("sidebar_expanded");
     if (savedState === "false") {
-      if (sidebar) sidebar.classList.remove("pf-m-expanded");
-      if (page) page.classList.remove("pf-m-sidebar-expanded");
+      if (sidebarEl) sidebarEl.classList.remove("pf-m-expanded");
+      if (pageEl) pageEl.classList.remove("pf-m-sidebar-expanded");
     } else if (isMobile() && savedState === null) {
-      if (sidebar) sidebar.classList.remove("pf-m-expanded");
-      if (page) page.classList.remove("pf-m-sidebar-expanded");
+      if (sidebarEl) sidebarEl.classList.remove("pf-m-expanded");
+      if (pageEl) pageEl.classList.remove("pf-m-sidebar-expanded");
     }
   })();
 

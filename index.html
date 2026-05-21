@@ -83,10 +83,10 @@
           <div class="pf-v6-c-nav__section-title sidebar-exam-header">
             <span>Exams</span>
             <div class="sidebar-exam-actions">
-              <button class="pf-v6-c-button pf-m-plain pf-m-sm cert-view-btn active" data-view="product" type="button" title="Group by product"><i class="fas fa-layer-group"></i></button>
-              <button class="pf-v6-c-button pf-m-plain pf-m-sm cert-view-btn" data-view="level" type="button" title="Group by level"><i class="fas fa-signal"></i></button>
-              <button class="pf-v6-c-button pf-m-plain pf-m-sm cert-view-btn" data-view="flat" type="button" title="Flat list"><i class="fas fa-list"></i></button>
-              <button class="pf-v6-c-button pf-m-plain pf-m-sm" id="sort-toggle" type="button" title="Sort order">A&#8594;Z</button>
+              <button class="pf-v6-c-button pf-m-plain pf-m-sm cert-view-btn active" data-view="product" type="button" title="Group by product" aria-pressed="true"><i class="fas fa-layer-group"></i></button>
+              <button class="pf-v6-c-button pf-m-plain pf-m-sm cert-view-btn" data-view="level" type="button" title="Group by level" aria-pressed="false"><i class="fas fa-signal"></i></button>
+              <button class="pf-v6-c-button pf-m-plain pf-m-sm cert-view-btn" data-view="flat" type="button" title="Flat list" aria-pressed="false"><i class="fas fa-list"></i></button>
+              <button class="pf-v6-c-button pf-m-plain pf-m-sm" id="sort-toggle" type="button" title="Sort order" aria-label="Sort ascending">A&#8594;Z</button>
             </div>
           </div>
           <div class="sidebar-search-row">
@@ -143,6 +143,10 @@
 
   <!-- Tooltip -->
   <div id="tooltip" class="cert-tooltip" aria-hidden="true"></div>
+
+  <footer class="site-footer">
+    Vibe coded by <a href="https://github.com/w4hf" target="_blank" rel="noopener noreferrer">Hamza (w4hf)</a> - <a href="https://github.com/w4hf/rh-cert-map" target="_blank" rel="noopener noreferrer">Github Repo</a> - 2026
+  </footer>
 
   <script src="app.js"></script>
 </body>

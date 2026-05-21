@@ -1161,7 +1161,7 @@
     if (e.key === "Enter") verifyBtn.click();
   });
 
-  // ── Sidebar Toggle (same pattern as provisioner base.html) ──────────────
+  // ── Sidebar Toggle ──────────────────────────────────────────────────────
 
   var navToggle = document.getElementById("nav-toggle");
   if (navToggle) {

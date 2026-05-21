@@ -1,5 +1,5 @@
 /* ===========================================
-   CSS Variables (from provisioner variables.css)
+   CSS Variables
    =========================================== */
 
 :root {
@@ -15,7 +15,7 @@
 }
 
 /* ===========================================
-   GLOBAL ELEMENT STYLES (from provisioner variables.css)
+   GLOBAL ELEMENT STYLES
    =========================================== */
 
 body {
@@ -33,7 +33,7 @@ body {
 }
 
 /* ===========================================
-   PAGE LAYOUT (from provisioner layout.css)
+   PAGE LAYOUT
    =========================================== */
 
 .pf-v6-c-page {
@@ -53,7 +53,7 @@ body {
 }
 
 /* ===========================================
-   MASTHEAD (from provisioner layout.css)
+   MASTHEAD
    =========================================== */
 
 .pf-v6-c-masthead {
@@ -108,7 +108,7 @@ body {
 }
 
 /* ===========================================
-   SIDEBAR (from provisioner layout.css)
+   SIDEBAR
    =========================================== */
 
 .pf-v6-c-page__sidebar {
@@ -152,7 +152,7 @@ body {
 }
 
 /* ===========================================
-   MAIN CONTENT (from provisioner layout.css)
+   MAIN CONTENT
    =========================================== */
 
 .pf-v6-c-page__main {
@@ -179,7 +179,7 @@ body {
 }
 
 /* ===========================================
-   NAVIGATION (from provisioner navigation.css)
+   NAVIGATION
    =========================================== */
 
 .pf-v6-c-nav {
@@ -197,7 +197,7 @@ body {
 }
 
 /* ===========================================
-   FORM CONTROLS (from provisioner forms.css)
+   FORM CONTROLS
    =========================================== */
 
 .pf-v6-c-form__group {
@@ -248,7 +248,7 @@ html:not(.pf-v6-theme-dark) .cert-input {
 }
 
 /* ===========================================
-   CARD OVERRIDES (from provisioner cards.css)
+   CARD OVERRIDES
    =========================================== */
 
 .pf-v6-c-card {
@@ -257,7 +257,7 @@ html:not(.pf-v6-theme-dark) .cert-input {
 }
 
 /* ===========================================
-   TABLE OVERRIDES (from provisioner)
+   TABLE OVERRIDES
    =========================================== */
 
 .pf-v6-c-table {

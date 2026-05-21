@@ -370,9 +370,13 @@
       const levelCount = product.levels.length;
       if (levelCount === 0) return;
 
-      const svgWidth = mapEl.clientWidth || 600;
-      const usable = svgWidth - s.paddingLeft - s.paddingRight;
-      const gap = levelCount > 1 ? usable / (levelCount - 1) : 0;
+      const containerWidth = mapEl.clientWidth || 600;
+      const usable = containerWidth - s.paddingLeft - s.paddingRight;
+      const maxGap = 450;
+      const gap = levelCount > 1 ? Math.min(usable / (levelCount - 1), maxGap) : 0;
+      const svgWidth = levelCount > 1
+        ? s.paddingLeft + gap * (levelCount - 1) + s.paddingRight
+        : containerWidth;
 
       const svg = document.createElementNS(SVG_NS, "svg");
       svg.setAttribute("viewBox", `0 0 ${svgWidth} ${s.rowHeight}`);
@@ -1164,26 +1168,47 @@
   // ── Sidebar Toggle ──────────────────────────────────────────────────────
 
   var navToggle = document.getElementById("nav-toggle");
+  var backdrop = document.getElementById("sidebar-backdrop");
+
+  function isMobile() {
+    return window.innerWidth <= 992;
+  }
+
+  function openSidebar() {
+    var sidebar = document.getElementById("page-sidebar");
+    var page = document.querySelector(".pf-v6-c-page");
+    if (sidebar) sidebar.classList.add("pf-m-expanded");
+    if (page) page.classList.add("pf-m-sidebar-expanded");
+    if (isMobile() && backdrop) backdrop.classList.add("visible");
+    localStorage.setItem("sidebar_expanded", "true");
+    setTimeout(renderMap, 50);
+  }
+
+  function closeSidebar() {
+    var sidebar = document.getElementById("page-sidebar");
+    var page = document.querySelector(".pf-v6-c-page");
+    if (sidebar) sidebar.classList.remove("pf-m-expanded");
+    if (page) page.classList.remove("pf-m-sidebar-expanded");
+    if (backdrop) backdrop.classList.remove("visible");
+    localStorage.setItem("sidebar_expanded", "false");
+    setTimeout(renderMap, 50);
+  }
+
   if (navToggle) {
     navToggle.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
       var sidebar = document.getElementById("page-sidebar");
-      var page = document.querySelector(".pf-v6-c-page");
-      if (sidebar) {
-        var isExpanded = sidebar.classList.contains("pf-m-expanded");
-        if (isExpanded) {
-          sidebar.classList.remove("pf-m-expanded");
-          if (page) page.classList.remove("pf-m-sidebar-expanded");
-          localStorage.setItem("sidebar_expanded", "false");
-        } else {
-          sidebar.classList.add("pf-m-expanded");
-          if (page) page.classList.add("pf-m-sidebar-expanded");
-          localStorage.setItem("sidebar_expanded", "true");
-        }
-        setTimeout(renderMap, 50);
+      if (sidebar && sidebar.classList.contains("pf-m-expanded")) {
+        closeSidebar();
+      } else {
+        openSidebar();
       }
     });
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener("click", closeSidebar);
   }
 
   (function () {
@@ -1191,6 +1216,9 @@
     var page = document.querySelector(".pf-v6-c-page");
     var savedState = localStorage.getItem("sidebar_expanded");
     if (savedState === "false") {
+      if (sidebar) sidebar.classList.remove("pf-m-expanded");
+      if (page) page.classList.remove("pf-m-sidebar-expanded");
+    } else if (isMobile() && savedState === null) {
       if (sidebar) sidebar.classList.remove("pf-m-expanded");
       if (page) page.classList.remove("pf-m-sidebar-expanded");
     }

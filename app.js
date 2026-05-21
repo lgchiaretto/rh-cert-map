@@ -1176,6 +1176,19 @@
     }
   });
 
+  // Auto-format cert ID: insert dashes after every 3 digits
+  certIdInput.addEventListener("input", () => {
+    const raw = certIdInput.value.replace(/[^0-9]/g, "").slice(0, 9);
+    let formatted = "";
+    for (let i = 0; i < raw.length; i++) {
+      if (i > 0 && i % 3 === 0) formatted += "-";
+      formatted += raw[i];
+    }
+    if (certIdInput.value !== formatted) {
+      certIdInput.value = formatted;
+    }
+  });
+
   // Allow Enter key to trigger verify
   certIdInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") verifyBtn.click();

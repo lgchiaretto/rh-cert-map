@@ -146,7 +146,7 @@
   const searchEl = document.getElementById("exam-search");
   const clearBtn = document.getElementById("clear-all");
   const sortToggleBtn = document.getElementById("sort-toggle");
-  const viewBtns = document.querySelectorAll(".view-btn");
+  const viewBtns = document.querySelectorAll(".cert-view-btn");
 
   let currentView = "product";
   let sortAsc = true;
@@ -339,8 +339,8 @@
     return {
       nodeRadius: narrow ? 10 : 14,
       rowHeight: narrow ? 78 : 92,
-      paddingLeft: narrow ? 14 : 20,
-      paddingRight: narrow ? 20 : 40,
+      paddingLeft: narrow ? 40 : 60,
+      paddingRight: narrow ? 40 : 60,
       nodeY: narrow ? 22 : 28,
       labelOffsetY: narrow ? 26 : 32,
       checkScale: narrow ? 0.7 : 1,
@@ -668,26 +668,34 @@
     resizeTimer = setTimeout(renderMap, 150);
   });
 
-  // ── Theme Toggle ────────────────────────────────────────────────────────
+  // ── Theme Toggle (PF6 pattern) ──────────────────────────────────────────
 
   const THEME_KEY = "redhat-cert-map-theme";
   const themeBtn = document.getElementById("theme-toggle");
+  const themeIcon = document.getElementById("theme-toggle-icon");
 
   function applyTheme(theme) {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem(THEME_KEY, theme);
+    if (theme === "dark") {
+      document.documentElement.classList.add("pf-v6-theme-dark");
+      if (themeIcon) { themeIcon.className = "fas fa-moon"; }
+    } else {
+      document.documentElement.classList.remove("pf-v6-theme-dark");
+      if (themeIcon) { themeIcon.className = "fas fa-sun"; }
+    }
   }
 
   function loadTheme() {
-    const saved = localStorage.getItem(THEME_KEY);
+    var saved = localStorage.getItem(THEME_KEY);
     if (saved === "dark" || saved === "light") return saved;
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }
 
   applyTheme(loadTheme());
 
-  themeBtn.addEventListener("click", () => {
-    const current = document.documentElement.getAttribute("data-theme");
+  themeBtn.addEventListener("click", function() {
+    var current = document.documentElement.getAttribute("data-theme");
     applyTheme(current === "dark" ? "light" : "dark");
   });
 
@@ -1078,7 +1086,7 @@
   verifyBtn.addEventListener("click", async () => {
     const certId = certIdInput.value;
     verifyStatus.textContent = "Fetching certifications...";
-    verifyStatus.className = "verify-status loading";
+    verifyStatus.className = "cert-verify-status loading";
     verifyOwner.textContent = "";
     verifySource.textContent = "";
     oldCredsSection.hidden = true;
@@ -1133,14 +1141,14 @@
       const total = credentials.length;
       if (matchedCount === 0) {
         verifyStatus.textContent = `Found ${total} credential(s) but none matched known exams`;
-        verifyStatus.className = "verify-status error";
+        verifyStatus.className = "cert-verify-status error";
       } else {
         verifyStatus.textContent = `Matched ${matchedCount} of ${total} current credential(s)`;
-        verifyStatus.className = "verify-status success";
+        verifyStatus.className = "cert-verify-status success";
       }
     } catch (err) {
       verifyStatus.textContent = err.message;
-      verifyStatus.className = "verify-status error";
+      verifyStatus.className = "cert-verify-status error";
       verifyOwner.textContent = "";
       verifySource.textContent = "";
     } finally {
@@ -1152,6 +1160,41 @@
   certIdInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") verifyBtn.click();
   });
+
+  // ── Sidebar Toggle ──────────────────────────────────────────────────────
+
+  var navToggle = document.getElementById("nav-toggle");
+  if (navToggle) {
+    navToggle.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var sidebar = document.getElementById("page-sidebar");
+      var page = document.querySelector(".pf-v6-c-page");
+      if (sidebar) {
+        var isExpanded = sidebar.classList.contains("pf-m-expanded");
+        if (isExpanded) {
+          sidebar.classList.remove("pf-m-expanded");
+          if (page) page.classList.remove("pf-m-sidebar-expanded");
+          localStorage.setItem("sidebar_expanded", "false");
+        } else {
+          sidebar.classList.add("pf-m-expanded");
+          if (page) page.classList.add("pf-m-sidebar-expanded");
+          localStorage.setItem("sidebar_expanded", "true");
+        }
+        setTimeout(renderMap, 50);
+      }
+    });
+  }
+
+  (function () {
+    var sidebar = document.getElementById("page-sidebar");
+    var page = document.querySelector(".pf-v6-c-page");
+    var savedState = localStorage.getItem("sidebar_expanded");
+    if (savedState === "false") {
+      if (sidebar) sidebar.classList.remove("pf-m-expanded");
+      if (page) page.classList.remove("pf-m-sidebar-expanded");
+    }
+  })();
 
   // ── Init ──────────────────────────────────────────────────────────────────
 

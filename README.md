@@ -10,15 +10,19 @@ Access the webapp at [https://rh-cert-map.wasmer.app/](https://rh-cert-map.wasme
 
 - **Interactive certification map** with five horizontal arrow tracks showing levels from Technologist/Developer up to Architect
 - **Automatic verification** -- enter your Red Hat Certification ID to auto-detect your passed exams and certifications from [rhtapps.redhat.com/verify](https://rhtapps.redhat.com/verify)
+- **URL-based verification** -- pass `?certId=###-###-###` as a URL parameter to auto-verify on page load
+- **Auto-formatted input** -- dashes are inserted automatically as you type or paste digits into the Certification ID field
+- **Legacy Credentials section** -- credentials from the old certification system that don't match the current map are shown with expiry status badges
 - **Other Exams section** -- exams from your transcript that don't map to the known certification tracks are displayed in a separate table with date badges
 - **Manual exam selection** -- check exams individually with a searchable, grouped checklist in the sidebar
 - **Partial progress indicators** -- levels that are partially completed show as orange "(in progress)" on the map
-- **Hover/tap tooltips** showing the requirements to reach each level
-- **Light and dark mode** with automatic detection and manual toggle
+- **Hover/tap tooltips** showing the requirements to reach each level and which exams you've passed
+- **Light and dark mode** with automatic detection and manual toggle, using Red Hat brand colors
 - **Collapsible sidebar** with exam list, search, view modes (by product, by level, flat), and sort toggle
+- **Mobile responsive** -- sidebar collapses to an overlay with backdrop on mobile, tables scroll horizontally
 - **Persistent state** saved in your browser's localStorage (exams, theme, sidebar)
-- **Fully responsive** -- works on desktop, tablet, and phone
 - **Auto-update** -- the app automatically reloads when a new version is deployed
+- **Accessibility** -- ARIA attributes on interactive controls (aria-expanded, aria-pressed, aria-label)
 
 ## Tech Stack
 
@@ -31,11 +35,11 @@ Access the webapp at [https://rh-cert-map.wasmer.app/](https://rh-cert-map.wasme
 
 The page follows a PatternFly v6 page component structure:
 
-- **Masthead** (`pf-v6-c-masthead`) -- Red Hat logo, app title, theme toggle
-- **Sidebar** (`pf-v6-c-page__sidebar`) -- Certification ID input, exam checklist with expandable groups
-- **Main content** (`pf-v6-c-page__main`) -- Certification map SVG, supplementary tables
+- **Masthead** (`pf-v6-c-masthead`) -- Red Hat logo, app title, GitHub link, theme toggle
+- **Sidebar** (`pf-v6-c-page__sidebar`) -- Certification ID input with auto-format, exam checklist with expandable groups, view modes, sort
+- **Main content** (`pf-v6-c-page__main`) -- Certification map SVG, Legacy Credentials table, Other Exams table
 
-All colors use PF6 semantic tokens (`--pf-t--global--*`), which automatically switch between light and dark themes when `pf-v6-theme-dark` is toggled on the `<html>` element.
+All colors are overridden with the Red Hat brand palette (#ee0000 accent, #f2f2f2/#ffffff light backgrounds, #000000/#292929 dark backgrounds) via CSS custom property overrides on PatternFly tokens.
 
 ## Usage
 
@@ -43,10 +47,19 @@ Open `index.html` in any browser. No build step or server required.
 
 ### Auto-detect certifications
 
-1. Enter your Certification ID (format: `###-###-###`) in the sidebar input field
+1. Enter your Certification ID (format: `###-###-###`) in the sidebar input field -- dashes are inserted automatically
 2. Click **Verify**
-3. The app reads your **Current Credentials** to populate the certification map, and reads your **Exam Transcript** to populate the "Other Exams" table with any exams not in the known certification tracks
-4. Your name and matched exams will appear, and the map updates automatically
+3. The app reads your **Current Credentials** to populate the certification map, and reads your **Exam Transcript** to populate the "Other Exams" table
+4. Unmatched legacy credentials are shown with expiry countdown badges
+5. Your name and matched exams will appear, and the map updates automatically
+
+### URL parameter
+
+You can link directly to a pre-verified view:
+
+```
+https://rh-cert-map.wasmer.app/?certId=140-255-795
+```
 
 ### Manual selection
 
@@ -60,8 +73,8 @@ On each deploy, bump the number in `version.txt` to trigger automatic browser re
 
 ```
 index.html        # Single-page app (PF6 page layout)
-style.css          # PF6-based styles with semantic tokens
-app.js             # Application logic (exam data, map rendering, verification)
+style.css         # PF6-based styles with brand color overrides
+app.js            # Application logic (exam data, map rendering, verification)
 redhat-favicon.png # Red Hat logo (masthead and favicon)
-version.txt        # Version number for auto-update detection
+version.txt       # Version number for auto-update detection
 ```

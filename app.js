@@ -1252,4 +1252,13 @@
 
   renderExamList();
   renderMap();
+
+  // Auto-verify if cert ID is provided in URL (e.g. ?certId=140-255-795)
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlCertId = urlParams.get("certId") || urlParams.get("certid");
+  if (urlCertId) {
+    certIdInput.value = urlCertId.trim();
+    certIdInput.dispatchEvent(new Event("input"));
+    verifyBtn.click();
+  }
 })();
